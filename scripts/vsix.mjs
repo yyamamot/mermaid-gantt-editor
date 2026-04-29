@@ -17,8 +17,8 @@ if (!command) {
 
 const vsixPath = `${packageName}-${packageVersion}.vsix`;
 const argsByCommand = {
-  package: ["package", "--no-dependencies", "--no-rewrite-relative-links"],
-  smoke: ["package", "--no-dependencies", "--no-rewrite-relative-links"],
+  package: ["package", "--no-dependencies"],
+  smoke: ["package", "--no-dependencies"],
   install: ["--install-extension", vsixPath],
   uninstall: ["--uninstall-extension", `${publisher}.${packageName}`]
 };

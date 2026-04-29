@@ -12,7 +12,7 @@ Task Grid で task label、ID、日付、期間、依存関係、タグを編集
 
 <!-- screenshot: readme-task-grid -->
 <p align="center">
-  <img src="assets/readme-task-grid.png" alt="Mermaid Gantt Editor Task Grid" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-task-grid.png" alt="Mermaid Gantt Editor Task Grid" width="960">
 </p>
 
 ## この拡張でできること
@@ -72,7 +72,7 @@ Command Palette から開く場合は次を実行します。
 
 <!-- screenshot: readme-markdown-codelens -->
 <p align="center">
-  <img src="assets/readme-markdown-codelens.png" alt="Markdown の Mermaid Gantt block 上に表示される Gantt Editor CodeLens" width="751">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-markdown-codelens.png" alt="Markdown の Mermaid Gantt block 上に表示される Gantt Editor CodeLens" width="751">
 </p>
 
 ### 3. Task Grid で編集する
@@ -81,7 +81,7 @@ Task Grid で label、ID、schedule、dependencies、tags を編集します。P
 
 <!-- screenshot: readme-details -->
 <p align="center">
-  <img src="assets/readme-details.png" alt="Task details and Mermaid preview" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-details.png" alt="Task details and Mermaid preview" width="960">
 </p>
 
 ### 4. Diagnostics を確認する
@@ -90,7 +90,7 @@ Task Grid で label、ID、schedule、dependencies、tags を編集します。P
 
 <!-- screenshot: readme-diagnostics -->
 <p align="center">
-  <img src="assets/readme-diagnostics.png" alt="Diagnostics and quick fixes" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-diagnostics.png" alt="Diagnostics and quick fixes" width="960">
 </p>
 
 ### 5. 必要なら raw source fallback を使う
@@ -99,7 +99,7 @@ Task Grid で label、ID、schedule、dependencies、tags を編集します。P
 
 <!-- screenshot: readme-fallback -->
 <p align="center">
-  <img src="assets/readme-fallback.png" alt="Raw source fallback mode" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-fallback.png" alt="Raw source fallback mode" width="960">
 </p>
 
 ## Features

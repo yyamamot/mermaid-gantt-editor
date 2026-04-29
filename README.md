@@ -12,7 +12,7 @@ It is designed for development teams that keep implementation plans, release pla
 
 <!-- screenshot: readme-task-grid -->
 <p align="center">
-  <img src="assets/readme-task-grid.png" alt="Mermaid Gantt Editor Task Grid" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-task-grid.png" alt="Mermaid Gantt Editor Task Grid" width="960">
 </p>
 
 ## What You Can Do
@@ -72,7 +72,7 @@ From the Command Palette, run:
 
 <!-- screenshot: readme-markdown-codelens -->
 <p align="center">
-  <img src="assets/readme-markdown-codelens.png" alt="Open Gantt Editor CodeLens above a Markdown Mermaid Gantt block" width="751">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-markdown-codelens.png" alt="Open Gantt Editor CodeLens above a Markdown Mermaid Gantt block" width="751">
 </p>
 
 ### 3. Edit in the Task Grid
@@ -81,7 +81,7 @@ Edit labels, IDs, schedules, dependencies, and tags directly in the Task Grid. T
 
 <!-- screenshot: readme-details -->
 <p align="center">
-  <img src="assets/readme-details.png" alt="Task details and Mermaid preview" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-details.png" alt="Task details and Mermaid preview" width="960">
 </p>
 
 ### 4. Review Diagnostics
@@ -90,7 +90,7 @@ Problems are shown in Diagnostics. When a fix is safe, you can apply it through 
 
 <!-- screenshot: readme-diagnostics -->
 <p align="center">
-  <img src="assets/readme-diagnostics.png" alt="Diagnostics and quick fixes" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-diagnostics.png" alt="Diagnostics and quick fixes" width="960">
 </p>
 
 ### 5. Use raw source fallback when needed
@@ -99,7 +99,7 @@ If the source contains unsupported syntax or risky metadata, the extension prote
 
 <!-- screenshot: readme-fallback -->
 <p align="center">
-  <img src="assets/readme-fallback.png" alt="Raw source fallback mode" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-fallback.png" alt="Raw source fallback mode" width="960">
 </p>
 
 ## Features
