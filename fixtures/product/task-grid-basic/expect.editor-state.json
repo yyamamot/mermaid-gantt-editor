@@ -1,0 +1,22 @@
+{
+  "mode": "structured",
+  "source": "gantt\ntitle Product Plan\ndateFormat YYYY-MM-DD\nsection Planning\nAPI design : done, a1, 2026-05-01, 3d\n設計レビュー : review, after a1, 2d\n",
+  "previewAvailable": true,
+  "rowLabels": [
+    "API design",
+    "設計レビュー"
+  ],
+  "rowIds": [
+    "a1",
+    "review"
+  ],
+  "rowDependencies": [
+    [],
+    [
+      "a1"
+    ]
+  ],
+  "advancedKinds": [],
+  "diagnosticCodes": [],
+  "projectionIssueCodes": []
+}

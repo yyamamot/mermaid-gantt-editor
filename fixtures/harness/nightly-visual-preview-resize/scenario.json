@@ -1,0 +1,48 @@
+{
+  "id": "nightly-visual-preview-resize",
+  "fixture": "fixtures/product/task-grid-basic/source.mmd",
+  "expectedMode": "structured",
+  "steps": [
+    {
+      "id": "open-fixture",
+      "type": "open-fixture"
+    },
+    {
+      "id": "open-task-grid",
+      "type": "run-command",
+      "command": "mermaidGantt.openTaskGrid"
+    },
+    {
+      "id": "resize-api-design-right",
+      "type": "run-command",
+      "command": "mermaidGantt.test.runWebviewOperation",
+      "args": [
+        {
+          "type": "preview-resize",
+          "taskSelector": {
+            "label": "API design"
+          },
+          "edge": "right",
+          "dayDelta": 1,
+          "expectedSourceIncludes": "API design : done, a1, 2026-05-01, 4d",
+          "timeoutMs": 5000
+        }
+      ]
+    },
+    {
+      "id": "get-editor-snapshot",
+      "type": "run-command",
+      "command": "mermaidGantt.test.getEditorSnapshot"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "mode",
+      "expected": "structured"
+    },
+    {
+      "type": "preview-source",
+      "expected": "available"
+    }
+  ]
+}

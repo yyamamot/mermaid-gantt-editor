@@ -1,0 +1,24 @@
+{
+  "mode": "structured",
+  "source": "---\nconfig:\n  gantt:\n    displayMode: compact\n---\ngantt\nTask A : a1, 1d\n",
+  "previewAvailable": false,
+  "rowLabels": [
+    "Task A"
+  ],
+  "rowIds": [
+    "a1"
+  ],
+  "rowDependencies": [
+    []
+  ],
+  "advancedKinds": [
+    "FrontmatterBlock"
+  ],
+  "diagnosticCodes": [
+    "HOST_VERSION_SENSITIVE_SYNTAX",
+    "UNSUPPORTED_FRONTMATTERBLOCK"
+  ],
+  "projectionIssueCodes": [
+    "unsupported-FrontmatterBlock"
+  ]
+}

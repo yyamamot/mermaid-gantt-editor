@@ -1,0 +1,78 @@
+{
+  "kind": "ResolvedDocument",
+  "semantic": {
+    "kind": "SemanticDocument",
+    "settings": {},
+    "sections": [
+      {
+        "id": "__default__",
+        "label": "",
+        "implicit": true,
+        "sourceLabelRaw": "",
+        "displayLabel": "",
+        "previewLabelPolicy": "truncate-with-tooltip",
+        "taskNodeIds": [
+          "i2"
+        ],
+        "tasks": [
+          {
+            "nodeId": "i2",
+            "label": "Orphan",
+            "sourceLabelRaw": "Orphan",
+            "displayLabel": "Orphan",
+            "previewLabelPolicy": "truncate-with-tooltip",
+            "tags": [],
+            "id": "o1",
+            "duration": "1d"
+          }
+        ]
+      },
+      {
+        "id": "section-0",
+        "label": "Phase 1",
+        "sourceNodeId": "i3",
+        "sourceLabelRaw": "Phase 1",
+        "displayLabel": "Phase 1",
+        "previewLabelPolicy": "truncate-with-tooltip",
+        "taskNodeIds": [
+          "i4"
+        ],
+        "tasks": [
+          {
+            "nodeId": "i4",
+            "label": "Task A",
+            "sourceLabelRaw": "Task A",
+            "displayLabel": "Task A",
+            "previewLabelPolicy": "truncate-with-tooltip",
+            "tags": [],
+            "id": "a1",
+            "after": [
+              "o1"
+            ],
+            "duration": "2d"
+          }
+        ]
+      }
+    ],
+    "projectionIssues": []
+  },
+  "diagnostics": [],
+  "tasks": [
+    {
+      "key": "task:i2",
+      "nodeId": "i2",
+      "mermaidId": "o1",
+      "label": "Orphan",
+      "dependencyKeys": []
+    },
+    {
+      "key": "task:i4",
+      "nodeId": "i4",
+      "mermaidId": "a1",
+      "label": "Task A",
+      "dependencyKeys": [
+        "task:i2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "preLaunchTask": "pnpm: build",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extension",
+        "openai.chatgpt",
+        "${workspaceFolder}/fixtures/manual"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
+      "env": {
+        "MERMAID_GANTT_RUN_ID": "f5-manual"
+      }
+    },
+    {
+      "name": "Run Extension With Runtime JSONL",
+      "type": "extensionHost",
+      "request": "launch",
+      "preLaunchTask": "pnpm: build",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extension",
+        "openai.chatgpt",
+        "${workspaceFolder}/fixtures/manual"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
+      "env": {
+        "MERMAID_GANTT_RUN_ID": "f5-manual",
+        "MERMAID_GANTT_RUNTIME_JSONL": "${workspaceFolder}/.tmp/f5-runtime.jsonl"
+      }
+    }
+  ]
+}

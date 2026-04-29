@@ -1,0 +1,11 @@
+{
+  "required": [
+    "diagnostics/date-format-mismatch",
+    "diagnostics/invalid-tick-interval",
+    "diagnostics/duplicate-task-id",
+    "diagnostics/undefined-dependency",
+    "diagnostics/keyword-like-task-label",
+    "diagnostics/long-japanese-label",
+    "diagnostics/host-version-sensitive-syntax"
+  ]
+}

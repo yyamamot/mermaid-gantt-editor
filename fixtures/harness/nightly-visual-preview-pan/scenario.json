@@ -1,0 +1,44 @@
+{
+  "id": "nightly-visual-preview-pan",
+  "fixture": "fixtures/product/preview-pan/source.mmd",
+  "expectedMode": "structured",
+  "steps": [
+    {
+      "id": "open-fixture",
+      "type": "open-fixture"
+    },
+    {
+      "id": "open-task-grid",
+      "type": "run-command",
+      "command": "mermaidGantt.openTaskGrid"
+    },
+    {
+      "id": "pan-preview",
+      "type": "run-command",
+      "command": "mermaidGantt.test.runWebviewOperation",
+      "args": [
+        {
+          "type": "preview-pan",
+          "deltaX": 420,
+          "deltaY": 260,
+          "timeoutMs": 5000
+        }
+      ]
+    },
+    {
+      "id": "get-editor-snapshot",
+      "type": "run-command",
+      "command": "mermaidGantt.test.getEditorSnapshot"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "mode",
+      "expected": "structured"
+    },
+    {
+      "type": "preview-source",
+      "expected": "available"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "code": "KEYWORD_LIKE_TASK_LABEL",
+    "stage": "resolution",
+    "severity": "warning",
+    "messageKey": "diagnostics.keywordLikeTaskLabel",
+    "summary": "Task label looks like a Mermaid keyword.",
+    "primaryRange": {
+      "start": {
+        "offset": 6,
+        "line": 2,
+        "column": 1
+      },
+      "end": {
+        "offset": 13,
+        "line": 2,
+        "column": 8
+      }
+    },
+    "primaryRaw": "section",
+    "suggestedActions": [
+      {
+        "kind": "manual-edit",
+        "labelKey": "diagnostics.action.renameKeywordLikeLabel",
+        "labelText": "Rename this task label to avoid Mermaid syntax confusion."
+      },
+      {
+        "kind": "quick-fix",
+        "labelKey": "diagnostics.action.prefixKeywordLikeLabel",
+        "replacement": {
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 13,
+              "line": 2,
+              "column": 8
+            }
+          },
+          "text": "Task section"
+        }
+      }
+    ]
+  }
+]

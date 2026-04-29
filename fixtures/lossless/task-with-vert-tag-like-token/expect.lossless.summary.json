@@ -1,0 +1,269 @@
+{
+  "fixtureId": "lossless/task-with-vert-tag-like-token",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "TaskStmt",
+      "raw": "Task A : vert, 2026-01-01, 0d\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 36,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task A",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 12,
+              "line": 2,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 13,
+              "line": 2,
+              "column": 8
+            },
+            "end": {
+              "offset": 14,
+              "line": 2,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "TagMetaSlice",
+            "raw": "vert",
+            "range": {
+              "start": {
+                "offset": 15,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              }
+            },
+            "valueRaw": "vert",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              },
+              "end": {
+                "offset": 21,
+                "line": 2,
+                "column": 16
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 19,
+                  "line": 2,
+                  "column": 14
+                },
+                "end": {
+                  "offset": 20,
+                  "line": 2,
+                  "column": 15
+                }
+              }
+            }
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 21,
+                "line": 2,
+                "column": 16
+              },
+              "end": {
+                "offset": 31,
+                "line": 2,
+                "column": 26
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 31,
+                "line": 2,
+                "column": 26
+              },
+              "end": {
+                "offset": 33,
+                "line": 2,
+                "column": 28
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 31,
+                  "line": 2,
+                  "column": 26
+                },
+                "end": {
+                  "offset": 32,
+                  "line": 2,
+                  "column": 27
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "0d",
+            "range": {
+              "start": {
+                "offset": 33,
+                "line": 2,
+                "column": 28
+              },
+              "end": {
+                "offset": 35,
+                "line": 2,
+                "column": 30
+              }
+            },
+            "valueRaw": "0d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "TagMetaSlice",
+            "raw": "vert",
+            "range": {
+              "start": {
+                "offset": 15,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              }
+            },
+            "valueRaw": "vert",
+            "errors": []
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 21,
+                "line": 2,
+                "column": 16
+              },
+              "end": {
+                "offset": 31,
+                "line": 2,
+                "column": 26
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "0d",
+            "range": {
+              "start": {
+                "offset": 33,
+                "line": 2,
+                "column": 28
+              },
+              "end": {
+                "offset": 35,
+                "line": 2,
+                "column": 30
+              }
+            },
+            "valueRaw": "0d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "task-label",
+    "task-colon",
+    "task-tag",
+    "task-comma",
+    "task-date",
+    "task-duration"
+  ]
+}

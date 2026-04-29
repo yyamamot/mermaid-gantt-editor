@@ -1,0 +1,7 @@
+{
+  "required": [
+    "resolved/basic-dependencies",
+    "resolved/default-section-order"
+  ],
+  "planned": []
+}

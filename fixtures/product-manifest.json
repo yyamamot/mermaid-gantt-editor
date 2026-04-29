@@ -1,0 +1,8 @@
+{
+  "required": [
+    "product/task-grid-basic",
+    "product/limited-editing-advanced-items",
+    "product/fallback-invalid-metadata",
+    "product/host-compatibility-frontmatter"
+  ]
+}

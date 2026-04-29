@@ -1,0 +1,41 @@
+{
+  "id": "nightly-visual-diagnostics",
+  "fixture": "fixtures/product/diagnostics-quick-fix/source.mmd",
+  "expectedMode": "structured",
+  "steps": [
+    {
+      "id": "open-fixture",
+      "type": "open-fixture"
+    },
+    {
+      "id": "open-task-grid",
+      "type": "run-command",
+      "command": "mermaidGantt.openTaskGrid"
+    },
+    {
+      "id": "get-editor-snapshot",
+      "type": "run-command",
+      "command": "mermaidGantt.test.getEditorSnapshot"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "mode",
+      "expected": "structured"
+    },
+    {
+      "type": "preview-source",
+      "expected": "available"
+    },
+    {
+      "type": "diagnostic",
+      "code": "DATE_FORMAT_MISMATCH",
+      "minCount": 1
+    },
+    {
+      "type": "diagnostic",
+      "code": "UNDEFINED_DEPENDENCY",
+      "minCount": 1
+    }
+  ]
+}

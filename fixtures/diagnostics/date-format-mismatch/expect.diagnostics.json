@@ -1,0 +1,48 @@
+[
+  {
+    "code": "DATE_FORMAT_MISMATCH",
+    "stage": "resolution",
+    "severity": "error",
+    "messageKey": "diagnostics.dateFormatMismatch",
+    "summary": "Task date does not match dateFormat.",
+    "primaryRange": {
+      "start": {
+        "offset": 37,
+        "line": 3,
+        "column": 10
+      },
+      "end": {
+        "offset": 47,
+        "line": 3,
+        "column": 20
+      }
+    },
+    "primaryRaw": "2026-01-01",
+    "suggestedActions": [
+      {
+        "kind": "manual-edit",
+        "labelKey": "diagnostics.action.alignDateFormat",
+        "labelText": "Align task dates with dateFormat."
+      },
+      {
+        "kind": "quick-fix",
+        "labelKey": "diagnostics.action.convertDateToConfiguredFormat",
+        "replacement": {
+          "range": {
+            "start": {
+              "offset": 37,
+              "line": 3,
+              "column": 10
+            },
+            "end": {
+              "offset": 47,
+              "line": 3,
+              "column": 20
+            }
+          },
+          "text": "01-01-2026"
+        }
+      }
+    ]
+  }
+]

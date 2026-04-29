@@ -1,0 +1,36 @@
+{
+  "id": "nightly-visual-fallback",
+  "fixture": "fixtures/product/fallback-invalid-metadata/source.mmd",
+  "expectedMode": "fallback",
+  "steps": [
+    {
+      "id": "open-fixture",
+      "type": "open-fixture"
+    },
+    {
+      "id": "open-task-grid",
+      "type": "run-command",
+      "command": "mermaidGantt.openTaskGrid"
+    },
+    {
+      "id": "get-editor-snapshot",
+      "type": "run-command",
+      "command": "mermaidGantt.test.getEditorSnapshot"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "mode",
+      "expected": "fallback"
+    },
+    {
+      "type": "preview-source",
+      "expected": "blocked"
+    },
+    {
+      "type": "diagnostic",
+      "code": "RAW_TASK_METADATA",
+      "minCount": 1
+    }
+  ]
+}

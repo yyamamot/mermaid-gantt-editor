@@ -1,0 +1,200 @@
+{
+  "fixtureId": "lossless/line-endings-crlf",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\r\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 7,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "TaskStmt",
+      "raw": "Task A : 2026-01-01, 3d\r\n",
+      "range": {
+        "start": {
+          "offset": 7,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 32,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task A",
+          "range": {
+            "start": {
+              "offset": 7,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 13,
+              "line": 2,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 14,
+              "line": 2,
+              "column": 8
+            },
+            "end": {
+              "offset": 15,
+              "line": 2,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 16,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 26,
+                "line": 2,
+                "column": 20
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 26,
+                "line": 2,
+                "column": 20
+              },
+              "end": {
+                "offset": 28,
+                "line": 2,
+                "column": 22
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 26,
+                  "line": 2,
+                  "column": 20
+                },
+                "end": {
+                  "offset": 27,
+                  "line": 2,
+                  "column": 21
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 28,
+                "line": 2,
+                "column": 22
+              },
+              "end": {
+                "offset": 30,
+                "line": 2,
+                "column": 24
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 16,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 26,
+                "line": 2,
+                "column": 20
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 28,
+                "line": 2,
+                "column": 22
+              },
+              "end": {
+                "offset": 30,
+                "line": 2,
+                "column": 24
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "task-label",
+    "task-colon",
+    "task-date",
+    "task-comma",
+    "task-duration"
+  ]
+}

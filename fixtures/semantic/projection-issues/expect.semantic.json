@@ -1,0 +1,276 @@
+{
+  "kind": "SemanticDocument",
+  "settings": {
+    "accTitle": "Release roadmap",
+    "accDescr": "Release milestones"
+  },
+  "sections": [
+    {
+      "id": "__default__",
+      "label": "",
+      "implicit": true,
+      "sourceLabelRaw": "",
+      "displayLabel": "",
+      "previewLabelPolicy": "truncate-with-tooltip",
+      "taskNodeIds": [
+        "i7"
+      ],
+      "tasks": [
+        {
+          "nodeId": "i7",
+          "label": "Task A",
+          "sourceLabelRaw": "Task A",
+          "displayLabel": "Task A",
+          "previewLabelPolicy": "truncate-with-tooltip",
+          "tags": []
+        }
+      ]
+    }
+  ],
+  "projectionIssues": [
+    {
+      "nodeId": "i1",
+      "reasonCode": "unsupported-FrontmatterBlock",
+      "message": "FrontmatterBlock is retained losslessly but is not part of the current Semantic AST projection.",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 29,
+          "line": 4,
+          "column": 1
+        }
+      },
+      "severity": "warning",
+      "stage": "projection",
+      "instruction": {
+        "summary": "FrontmatterBlock is retained losslessly but is not part of the current Semantic AST projection.",
+        "primaryRange": {
+          "start": {
+            "offset": 0,
+            "line": 1,
+            "column": 1
+          },
+          "end": {
+            "offset": 29,
+            "line": 4,
+            "column": 1
+          }
+        },
+        "suggestedActions": [
+          {
+            "kind": "fallback",
+            "label": "Keep this source in raw/fallback mode."
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i2",
+      "reasonCode": "unsupported-DirectiveBlock",
+      "message": "DirectiveBlock is retained losslessly but is not part of the current Semantic AST projection.",
+      "range": {
+        "start": {
+          "offset": 29,
+          "line": 4,
+          "column": 1
+        },
+        "end": {
+          "offset": 63,
+          "line": 5,
+          "column": 1
+        }
+      },
+      "severity": "warning",
+      "stage": "projection",
+      "instruction": {
+        "summary": "DirectiveBlock is retained losslessly but is not part of the current Semantic AST projection.",
+        "primaryRange": {
+          "start": {
+            "offset": 29,
+            "line": 4,
+            "column": 1
+          },
+          "end": {
+            "offset": 63,
+            "line": 5,
+            "column": 1
+          }
+        },
+        "suggestedActions": [
+          {
+            "kind": "fallback",
+            "label": "Keep this source in raw/fallback mode."
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i6",
+      "reasonCode": "unsupported-VertStmt",
+      "message": "VertStmt is retained losslessly but is not part of the current Semantic AST projection.",
+      "range": {
+        "start": {
+          "offset": 124,
+          "line": 8,
+          "column": 1
+        },
+        "end": {
+          "offset": 140,
+          "line": 9,
+          "column": 1
+        }
+      },
+      "severity": "warning",
+      "stage": "projection",
+      "instruction": {
+        "summary": "VertStmt is retained losslessly but is not part of the current Semantic AST projection.",
+        "primaryRange": {
+          "start": {
+            "offset": 124,
+            "line": 8,
+            "column": 1
+          },
+          "end": {
+            "offset": 140,
+            "line": 9,
+            "column": 1
+          }
+        },
+        "suggestedActions": [
+          {
+            "kind": "fallback",
+            "label": "Keep this source in raw/fallback mode."
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i7",
+      "reasonCode": "parse-INVALID_DURATION_TOKEN",
+      "message": "Duration-like metadata is invalid: 3dX",
+      "range": {
+        "start": {
+          "offset": 149,
+          "line": 9,
+          "column": 10
+        },
+        "end": {
+          "offset": 152,
+          "line": 9,
+          "column": 13
+        }
+      },
+      "severity": "error",
+      "stage": "projection",
+      "instruction": {
+        "summary": "Use a valid duration such as `3d`, `2w`, `1month`, or keep the value as raw text.",
+        "primaryRange": {
+          "start": {
+            "offset": 149,
+            "line": 9,
+            "column": 10
+          },
+          "end": {
+            "offset": 152,
+            "line": 9,
+            "column": 13
+          }
+        },
+        "suggestedActions": [
+          {
+            "kind": "manual-edit",
+            "label": "Use a valid duration such as `3d`, `2w`, `1month`, or keep the value as raw text."
+          },
+          {
+            "kind": "fallback",
+            "label": "Keep this source in raw/fallback mode."
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i7",
+      "reasonCode": "raw-task-metadata",
+      "message": "Raw task metadata is retained losslessly but cannot be projected safely.",
+      "range": {
+        "start": {
+          "offset": 149,
+          "line": 9,
+          "column": 10
+        },
+        "end": {
+          "offset": 152,
+          "line": 9,
+          "column": 13
+        }
+      },
+      "severity": "warning",
+      "stage": "projection",
+      "instruction": {
+        "summary": "Raw task metadata is retained losslessly but cannot be projected safely.",
+        "primaryRange": {
+          "start": {
+            "offset": 149,
+            "line": 9,
+            "column": 10
+          },
+          "end": {
+            "offset": 152,
+            "line": 9,
+            "column": 13
+          }
+        },
+        "suggestedActions": [
+          {
+            "kind": "fallback",
+            "label": "Keep this source in raw/fallback mode."
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i8",
+      "reasonCode": "unsupported-ClickStmt",
+      "message": "ClickStmt is retained losslessly but is not part of the current Semantic AST projection.",
+      "range": {
+        "start": {
+          "offset": 153,
+          "line": 10,
+          "column": 1
+        },
+        "end": {
+          "offset": 174,
+          "line": 11,
+          "column": 1
+        }
+      },
+      "severity": "warning",
+      "stage": "projection",
+      "instruction": {
+        "summary": "ClickStmt is retained losslessly but is not part of the current Semantic AST projection.",
+        "primaryRange": {
+          "start": {
+            "offset": 153,
+            "line": 10,
+            "column": 1
+          },
+          "end": {
+            "offset": 174,
+            "line": 11,
+            "column": 1
+          }
+        },
+        "suggestedActions": [
+          {
+            "kind": "fallback",
+            "label": "Keep this source in raw/fallback mode."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "code": "INVALID_TICK_INTERVAL",
+    "stage": "parse",
+    "severity": "error",
+    "messageKey": "diagnostics.invalidTickInterval",
+    "summary": "Use a numeric interval such as `1day`, `1week`, or `1month`.",
+    "primaryRange": {
+      "start": {
+        "offset": 19,
+        "line": 2,
+        "column": 14
+      },
+      "end": {
+        "offset": 28,
+        "line": 2,
+        "column": 23
+      }
+    },
+    "primaryRaw": "everyweek",
+    "suggestedActions": [
+      {
+        "kind": "manual-edit",
+        "labelKey": "diagnostics.action.useValidTickInterval",
+        "labelText": "Use a numeric interval such as `1day`, `1week`, or `1month`."
+      },
+      {
+        "kind": "quick-fix",
+        "labelKey": "diagnostics.action.useOneWeekTickInterval",
+        "replacement": {
+          "range": {
+            "start": {
+              "offset": 19,
+              "line": 2,
+              "column": 14
+            },
+            "end": {
+              "offset": 28,
+              "line": 2,
+              "column": 23
+            }
+          },
+          "text": "1week"
+        }
+      }
+    ]
+  }
+]

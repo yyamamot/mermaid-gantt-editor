@@ -1,0 +1,94 @@
+{
+  "fixtureId": "malformed/accdescription-alias",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "UnknownStatement",
+      "raw": "accDescription: Alias text\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 33,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "source",
+      "projectable": false,
+      "errors": [
+        {
+          "severity": "error",
+          "code": "UNSUPPORTED_ACC_DESCRIPTION_ALIAS",
+          "message": "accDescription is treated as recovery-only input.",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 33,
+              "line": 3,
+              "column": 1
+            }
+          },
+          "stage": "parse",
+          "instruction": {
+            "summary": "Use `accDescr:` for a single-line accessible description or `accDescr { ... }` for a multiline description.",
+            "primaryRange": {
+              "start": {
+                "offset": 6,
+                "line": 2,
+                "column": 1
+              },
+              "end": {
+                "offset": 33,
+                "line": 3,
+                "column": 1
+              }
+            },
+            "suggestedActions": [
+              {
+                "kind": "manual-edit",
+                "label": "Use `accDescr:` for a single-line accessible description or `accDescr { ... }` for a multiline description."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "mode": "structured",
+  "source": "%%{init: { \"theme\": \"forest\" }}%%\ngantt\nsection Planning\nTask A : a1, 2d\nclick a1 href \"https://example.com\"\n",
+  "previewAvailable": false,
+  "rowLabels": [
+    "Task A"
+  ],
+  "rowIds": [
+    "a1"
+  ],
+  "rowDependencies": [
+    []
+  ],
+  "advancedKinds": [
+    "DirectiveBlock",
+    "ClickStmt"
+  ],
+  "diagnosticCodes": [
+    "UNSUPPORTED_DIRECTIVEBLOCK",
+    "UNSUPPORTED_CLICKSTMT"
+  ],
+  "projectionIssueCodes": [
+    "unsupported-DirectiveBlock",
+    "unsupported-ClickStmt"
+  ]
+}

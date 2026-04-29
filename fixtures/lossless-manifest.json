@@ -1,0 +1,43 @@
+{
+  "required": [
+    "lossless/minimal-basic",
+    "lossless/frontmatter-config",
+    "lossless/directive-above",
+    "lossless/click-multi-id-href",
+    "lossless/click-call-noargs",
+    "lossless/click-call-args",
+    "lossless/directive-below",
+    "lossless/comment-lines",
+    "lossless/line-endings-crlf",
+    "lossless/unicode-japanese-text",
+    "lossless/label-html-break-marker",
+    "lossless/label-escaped-newline-marker",
+    "lossless/acc-descr-multiline",
+    "lossless/title-section-task",
+    "lossless/date-axis-tick-weekday",
+    "lossless/excludes-weekends-weekend-friday",
+    "lossless/today-marker-style",
+    "lossless/task-after-single",
+    "lossless/task-after-multi",
+    "lossless/task-until",
+    "lossless/task-duration-variants",
+    "lossless/task-multi-tag",
+    "lossless/task-with-vert-tag-like-token",
+    "lossless/milestone",
+    "lossless/vert-marker",
+    "lossless/acc-title-single",
+    "lossless/acc-descr-single",
+    "lossless/top-axis-statement",
+    "lossless/includes",
+    "lossless/inclusive-end-dates",
+    "lossless/task-empty-meta",
+    "malformed/accdescr-resync-task",
+    "malformed/accdescription-alias",
+    "malformed/task-actual-newline-label",
+    "malformed/invalid-duration-token"
+  ],
+  "planned": [
+    "preview-label-long-japanese",
+    "malformed-unclosed-accdescr"
+  ]
+}

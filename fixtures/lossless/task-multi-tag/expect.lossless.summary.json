@@ -1,0 +1,474 @@
+{
+  "fixtureId": "lossless/task-multi-tag",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "TaskStmt",
+      "raw": "Task : done, crit, milestone, a1, 2026-01-01, 0d\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 55,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 10,
+              "line": 2,
+              "column": 5
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 11,
+              "line": 2,
+              "column": 6
+            },
+            "end": {
+              "offset": 12,
+              "line": 2,
+              "column": 7
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "TagMetaSlice",
+            "raw": "done",
+            "range": {
+              "start": {
+                "offset": 13,
+                "line": 2,
+                "column": 8
+              },
+              "end": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              }
+            },
+            "valueRaw": "done",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              },
+              "end": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 17,
+                  "line": 2,
+                  "column": 12
+                },
+                "end": {
+                  "offset": 18,
+                  "line": 2,
+                  "column": 13
+                }
+              }
+            }
+          },
+          {
+            "kind": "TagMetaSlice",
+            "raw": "crit",
+            "range": {
+              "start": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              },
+              "end": {
+                "offset": 23,
+                "line": 2,
+                "column": 18
+              }
+            },
+            "valueRaw": "crit",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 23,
+                "line": 2,
+                "column": 18
+              },
+              "end": {
+                "offset": 25,
+                "line": 2,
+                "column": 20
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 23,
+                  "line": 2,
+                  "column": 18
+                },
+                "end": {
+                  "offset": 24,
+                  "line": 2,
+                  "column": 19
+                }
+              }
+            }
+          },
+          {
+            "kind": "TagMetaSlice",
+            "raw": "milestone",
+            "range": {
+              "start": {
+                "offset": 25,
+                "line": 2,
+                "column": 20
+              },
+              "end": {
+                "offset": 34,
+                "line": 2,
+                "column": 29
+              }
+            },
+            "valueRaw": "milestone",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 34,
+                "line": 2,
+                "column": 29
+              },
+              "end": {
+                "offset": 36,
+                "line": 2,
+                "column": 31
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 34,
+                  "line": 2,
+                  "column": 29
+                },
+                "end": {
+                  "offset": 35,
+                  "line": 2,
+                  "column": 30
+                }
+              }
+            }
+          },
+          {
+            "kind": "IdMetaSlice",
+            "raw": "a1",
+            "range": {
+              "start": {
+                "offset": 36,
+                "line": 2,
+                "column": 31
+              },
+              "end": {
+                "offset": 38,
+                "line": 2,
+                "column": 33
+              }
+            },
+            "valueRaw": "a1",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 38,
+                "line": 2,
+                "column": 33
+              },
+              "end": {
+                "offset": 40,
+                "line": 2,
+                "column": 35
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 38,
+                  "line": 2,
+                  "column": 33
+                },
+                "end": {
+                  "offset": 39,
+                  "line": 2,
+                  "column": 34
+                }
+              }
+            }
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 40,
+                "line": 2,
+                "column": 35
+              },
+              "end": {
+                "offset": 50,
+                "line": 2,
+                "column": 45
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 50,
+                "line": 2,
+                "column": 45
+              },
+              "end": {
+                "offset": 52,
+                "line": 2,
+                "column": 47
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 50,
+                  "line": 2,
+                  "column": 45
+                },
+                "end": {
+                  "offset": 51,
+                  "line": 2,
+                  "column": 46
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "0d",
+            "range": {
+              "start": {
+                "offset": 52,
+                "line": 2,
+                "column": 47
+              },
+              "end": {
+                "offset": 54,
+                "line": 2,
+                "column": 49
+              }
+            },
+            "valueRaw": "0d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "TagMetaSlice",
+            "raw": "done",
+            "range": {
+              "start": {
+                "offset": 13,
+                "line": 2,
+                "column": 8
+              },
+              "end": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              }
+            },
+            "valueRaw": "done",
+            "errors": []
+          },
+          {
+            "kind": "TagMetaSlice",
+            "raw": "crit",
+            "range": {
+              "start": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              },
+              "end": {
+                "offset": 23,
+                "line": 2,
+                "column": 18
+              }
+            },
+            "valueRaw": "crit",
+            "errors": []
+          },
+          {
+            "kind": "TagMetaSlice",
+            "raw": "milestone",
+            "range": {
+              "start": {
+                "offset": 25,
+                "line": 2,
+                "column": 20
+              },
+              "end": {
+                "offset": 34,
+                "line": 2,
+                "column": 29
+              }
+            },
+            "valueRaw": "milestone",
+            "errors": []
+          },
+          {
+            "kind": "IdMetaSlice",
+            "raw": "a1",
+            "range": {
+              "start": {
+                "offset": 36,
+                "line": 2,
+                "column": 31
+              },
+              "end": {
+                "offset": 38,
+                "line": 2,
+                "column": 33
+              }
+            },
+            "valueRaw": "a1",
+            "errors": []
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 40,
+                "line": 2,
+                "column": 35
+              },
+              "end": {
+                "offset": 50,
+                "line": 2,
+                "column": 45
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "0d",
+            "range": {
+              "start": {
+                "offset": 52,
+                "line": 2,
+                "column": 47
+              },
+              "end": {
+                "offset": 54,
+                "line": 2,
+                "column": 49
+              }
+            },
+            "valueRaw": "0d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "task-label",
+    "task-colon",
+    "task-tag",
+    "task-comma",
+    "task-id",
+    "task-date",
+    "task-duration"
+  ]
+}

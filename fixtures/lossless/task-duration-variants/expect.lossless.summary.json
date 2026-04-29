@@ -1,0 +1,316 @@
+{
+  "fixtureId": "lossless/task-duration-variants",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "TaskStmt",
+      "raw": "Milliseconds : 10ms\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 26,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Milliseconds",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 18,
+              "line": 2,
+              "column": 13
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 19,
+              "line": 2,
+              "column": 14
+            },
+            "end": {
+              "offset": 20,
+              "line": 2,
+              "column": 15
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "10ms",
+            "range": {
+              "start": {
+                "offset": 21,
+                "line": 2,
+                "column": 16
+              },
+              "end": {
+                "offset": 25,
+                "line": 2,
+                "column": 20
+              }
+            },
+            "valueRaw": "10ms",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "10ms",
+            "range": {
+              "start": {
+                "offset": 21,
+                "line": 2,
+                "column": 16
+              },
+              "end": {
+                "offset": 25,
+                "line": 2,
+                "column": 20
+              }
+            },
+            "valueRaw": "10ms",
+            "errors": []
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i3",
+      "kind": "TaskStmt",
+      "raw": "Seconds : 5s\n",
+      "range": {
+        "start": {
+          "offset": 26,
+          "line": 3,
+          "column": 1
+        },
+        "end": {
+          "offset": 39,
+          "line": 4,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Seconds",
+          "range": {
+            "start": {
+              "offset": 26,
+              "line": 3,
+              "column": 1
+            },
+            "end": {
+              "offset": 33,
+              "line": 3,
+              "column": 8
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 34,
+              "line": 3,
+              "column": 9
+            },
+            "end": {
+              "offset": 35,
+              "line": 3,
+              "column": 10
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "5s",
+            "range": {
+              "start": {
+                "offset": 36,
+                "line": 3,
+                "column": 11
+              },
+              "end": {
+                "offset": 38,
+                "line": 3,
+                "column": 13
+              }
+            },
+            "valueRaw": "5s",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "5s",
+            "range": {
+              "start": {
+                "offset": 36,
+                "line": 3,
+                "column": 11
+              },
+              "end": {
+                "offset": 38,
+                "line": 3,
+                "column": 13
+              }
+            },
+            "valueRaw": "5s",
+            "errors": []
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i4",
+      "kind": "TaskStmt",
+      "raw": "Decimal days : 1.5d\n",
+      "range": {
+        "start": {
+          "offset": 39,
+          "line": 4,
+          "column": 1
+        },
+        "end": {
+          "offset": 59,
+          "line": 5,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Decimal days",
+          "range": {
+            "start": {
+              "offset": 39,
+              "line": 4,
+              "column": 1
+            },
+            "end": {
+              "offset": 51,
+              "line": 4,
+              "column": 13
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 52,
+              "line": 4,
+              "column": 14
+            },
+            "end": {
+              "offset": 53,
+              "line": 4,
+              "column": 15
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "1.5d",
+            "range": {
+              "start": {
+                "offset": 54,
+                "line": 4,
+                "column": 16
+              },
+              "end": {
+                "offset": 58,
+                "line": 4,
+                "column": 20
+              }
+            },
+            "valueRaw": "1.5d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "1.5d",
+            "range": {
+              "start": {
+                "offset": 54,
+                "line": 4,
+                "column": 16
+              },
+              "end": {
+                "offset": 58,
+                "line": 4,
+                "column": 20
+              }
+            },
+            "valueRaw": "1.5d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "task-label",
+    "task-colon",
+    "task-duration"
+  ]
+}

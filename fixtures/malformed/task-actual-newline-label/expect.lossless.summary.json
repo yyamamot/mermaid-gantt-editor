@@ -1,0 +1,191 @@
+{
+  "fixtureId": "malformed/task-actual-newline-label",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "UnknownStatement",
+      "raw": "Task A\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 13,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "source",
+      "projectable": false,
+      "errors": [
+        {
+          "severity": "error",
+          "code": "UNKNOWN_STATEMENT",
+          "message": "Statement was not recognized.",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 13,
+              "line": 3,
+              "column": 1
+            }
+          },
+          "stage": "parse",
+          "instruction": {
+            "summary": "Edit this line to a supported Mermaid Gantt statement or keep it in raw/fallback mode.",
+            "primaryRange": {
+              "start": {
+                "offset": 6,
+                "line": 2,
+                "column": 1
+              },
+              "end": {
+                "offset": 13,
+                "line": 3,
+                "column": 1
+              }
+            },
+            "suggestedActions": [
+              {
+                "kind": "manual-edit",
+                "label": "Edit this line to a supported Mermaid Gantt statement or keep it in raw/fallback mode."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "nodeId": "i3",
+      "kind": "TaskStmt",
+      "raw": "続き : 3d\n",
+      "range": {
+        "start": {
+          "offset": 13,
+          "line": 3,
+          "column": 1
+        },
+        "end": {
+          "offset": 21,
+          "line": 4,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "続き",
+          "range": {
+            "start": {
+              "offset": 13,
+              "line": 3,
+              "column": 1
+            },
+            "end": {
+              "offset": 15,
+              "line": 3,
+              "column": 3
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 16,
+              "line": 3,
+              "column": 4
+            },
+            "end": {
+              "offset": 17,
+              "line": 3,
+              "column": 5
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 18,
+                "line": 3,
+                "column": 6
+              },
+              "end": {
+                "offset": 20,
+                "line": 3,
+                "column": 8
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 18,
+                "line": 3,
+                "column": 6
+              },
+              "end": {
+                "offset": 20,
+                "line": 3,
+                "column": 8
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "unknown-fragment",
+    "task-label",
+    "task-colon",
+    "task-duration"
+  ]
+}

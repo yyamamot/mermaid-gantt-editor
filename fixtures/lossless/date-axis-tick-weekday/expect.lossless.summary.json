@@ -1,0 +1,294 @@
+{
+  "fixtureId": "lossless/date-axis-tick-weekday",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "DateFormatStmt",
+      "raw": "dateFormat YYYY-MM-DD\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 28,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "valueRaw": "YYYY-MM-DD"
+      }
+    },
+    {
+      "nodeId": "i3",
+      "kind": "AxisFormatStmt",
+      "raw": "axisFormat %Y-%m-%d\n",
+      "range": {
+        "start": {
+          "offset": 28,
+          "line": 3,
+          "column": 1
+        },
+        "end": {
+          "offset": 48,
+          "line": 4,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "valueRaw": "%Y-%m-%d"
+      }
+    },
+    {
+      "nodeId": "i4",
+      "kind": "TickIntervalStmt",
+      "raw": "tickInterval 1week\n",
+      "range": {
+        "start": {
+          "offset": 48,
+          "line": 4,
+          "column": 1
+        },
+        "end": {
+          "offset": 67,
+          "line": 5,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "valueRaw": "1week"
+      }
+    },
+    {
+      "nodeId": "i5",
+      "kind": "WeekdayStmt",
+      "raw": "weekday monday\n",
+      "range": {
+        "start": {
+          "offset": 67,
+          "line": 5,
+          "column": 1
+        },
+        "end": {
+          "offset": 82,
+          "line": 6,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "valueRaw": "monday"
+      }
+    },
+    {
+      "nodeId": "i6",
+      "kind": "TaskStmt",
+      "raw": "Task A : 2026-01-01, 3d\n",
+      "range": {
+        "start": {
+          "offset": 82,
+          "line": 6,
+          "column": 1
+        },
+        "end": {
+          "offset": 106,
+          "line": 7,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task A",
+          "range": {
+            "start": {
+              "offset": 82,
+              "line": 6,
+              "column": 1
+            },
+            "end": {
+              "offset": 88,
+              "line": 6,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 89,
+              "line": 6,
+              "column": 8
+            },
+            "end": {
+              "offset": 90,
+              "line": 6,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 91,
+                "line": 6,
+                "column": 10
+              },
+              "end": {
+                "offset": 101,
+                "line": 6,
+                "column": 20
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 101,
+                "line": 6,
+                "column": 20
+              },
+              "end": {
+                "offset": 103,
+                "line": 6,
+                "column": 22
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 101,
+                  "line": 6,
+                  "column": 20
+                },
+                "end": {
+                  "offset": 102,
+                  "line": 6,
+                  "column": 21
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 103,
+                "line": 6,
+                "column": 22
+              },
+              "end": {
+                "offset": 105,
+                "line": 6,
+                "column": 24
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 91,
+                "line": 6,
+                "column": 10
+              },
+              "end": {
+                "offset": 101,
+                "line": 6,
+                "column": 20
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 103,
+                "line": 6,
+                "column": 22
+              },
+              "end": {
+                "offset": 105,
+                "line": 6,
+                "column": 24
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "statement-keyword",
+    "statement-value",
+    "task-label",
+    "task-colon",
+    "task-date",
+    "task-comma",
+    "task-duration"
+  ]
+}

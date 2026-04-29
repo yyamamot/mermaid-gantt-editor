@@ -1,0 +1,266 @@
+{
+  "fixtureId": "lossless/click-call-args",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "TaskStmt",
+      "raw": "Task A : a1, 3d\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 22,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task A",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 12,
+              "line": 2,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 13,
+              "line": 2,
+              "column": 8
+            },
+            "end": {
+              "offset": 14,
+              "line": 2,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "IdMetaSlice",
+            "raw": "a1",
+            "range": {
+              "start": {
+                "offset": 15,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              }
+            },
+            "valueRaw": "a1",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              },
+              "end": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 17,
+                  "line": 2,
+                  "column": 12
+                },
+                "end": {
+                  "offset": 18,
+                  "line": 2,
+                  "column": 13
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              },
+              "end": {
+                "offset": 21,
+                "line": 2,
+                "column": 16
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "IdMetaSlice",
+            "raw": "a1",
+            "range": {
+              "start": {
+                "offset": 15,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              }
+            },
+            "valueRaw": "a1",
+            "errors": []
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              },
+              "end": {
+                "offset": 21,
+                "line": 2,
+                "column": 16
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i3",
+      "kind": "ClickStmt",
+      "raw": "click a1 call showDetails(a1)\n",
+      "range": {
+        "start": {
+          "offset": 22,
+          "line": 3,
+          "column": 1
+        },
+        "end": {
+          "offset": 52,
+          "line": 4,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": false,
+      "errors": [],
+      "details": {
+        "targetIdsRaw": "a1",
+        "targetIds": [
+          {
+            "raw": "a1",
+            "range": {
+              "start": {
+                "offset": 28,
+                "line": 3,
+                "column": 7
+              },
+              "end": {
+                "offset": 30,
+                "line": 3,
+                "column": 9
+              }
+            }
+          }
+        ],
+        "clauses": [
+          {
+            "kind": "ClickCallClause",
+            "raw": "call showDetails(a1)",
+            "range": {
+              "start": {
+                "offset": 31,
+                "line": 3,
+                "column": 10
+              },
+              "end": {
+                "offset": 51,
+                "line": 3,
+                "column": 30
+              }
+            },
+            "errors": [],
+            "callbackRaw": "showDetails",
+            "argsRaw": "a1"
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "task-label",
+    "task-colon",
+    "task-id",
+    "task-comma",
+    "task-duration",
+    "statement-keyword",
+    "click-task-id",
+    "click-call-keyword",
+    "click-callback",
+    "click-callback-args"
+  ]
+}

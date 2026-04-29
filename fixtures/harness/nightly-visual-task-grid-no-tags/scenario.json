@@ -1,0 +1,31 @@
+{
+  "id": "nightly-visual-task-grid-no-tags",
+  "fixture": "fixtures/product/task-grid-no-tags/source.mmd",
+  "expectedMode": "structured",
+  "steps": [
+    {
+      "id": "open-fixture",
+      "type": "open-fixture"
+    },
+    {
+      "id": "open-task-grid",
+      "type": "run-command",
+      "command": "mermaidGantt.openTaskGrid"
+    },
+    {
+      "id": "get-editor-snapshot",
+      "type": "run-command",
+      "command": "mermaidGantt.test.getEditorSnapshot"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "mode",
+      "expected": "structured"
+    },
+    {
+      "type": "preview-source",
+      "expected": "available"
+    }
+  ]
+}

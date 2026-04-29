@@ -1,0 +1,10 @@
+{
+  "required": [
+    "semantic/title-section-task",
+    "semantic/default-section",
+    "semantic/settings-all",
+    "semantic/task-date-until",
+    "semantic/projection-issues"
+  ],
+  "planned": []
+}

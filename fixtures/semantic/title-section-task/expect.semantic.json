@@ -1,0 +1,32 @@
+{
+  "kind": "SemanticDocument",
+  "settings": {
+    "title": "Product Plan"
+  },
+  "sections": [
+    {
+      "id": "section-0",
+      "label": "Phase 1",
+      "sourceNodeId": "i3",
+      "sourceLabelRaw": "Phase 1",
+      "displayLabel": "Phase 1",
+      "previewLabelPolicy": "truncate-with-tooltip",
+      "taskNodeIds": [
+        "i4"
+      ],
+      "tasks": [
+        {
+          "nodeId": "i4",
+          "label": "Task A",
+          "sourceLabelRaw": "Task A",
+          "displayLabel": "Task A",
+          "previewLabelPolicy": "truncate-with-tooltip",
+          "tags": [],
+          "start": "2026-01-01",
+          "duration": "3d"
+        }
+      ]
+    }
+  ],
+  "projectionIssues": []
+}

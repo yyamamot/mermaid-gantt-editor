@@ -1,0 +1,29 @@
+[
+  {
+    "code": "LONG_LABEL_READABILITY",
+    "stage": "resolution",
+    "severity": "info",
+    "messageKey": "diagnostics.longLabelReadability",
+    "summary": "Long label may be hard to read in Mermaid preview.",
+    "primaryRange": {
+      "start": {
+        "offset": 6,
+        "line": 2,
+        "column": 1
+      },
+      "end": {
+        "offset": 40,
+        "line": 2,
+        "column": 35
+      }
+    },
+    "primaryRaw": "これは非常に長い日本語のタスク名でプレビュー上の可読性確認が必要です",
+    "suggestedActions": [
+      {
+        "kind": "manual-edit",
+        "labelKey": "diagnostics.action.reviewPreviewLabel",
+        "labelText": "Review preview label readability."
+      }
+    ]
+  }
+]

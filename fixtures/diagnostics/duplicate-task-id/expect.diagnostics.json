@@ -1,0 +1,63 @@
+[
+  {
+    "code": "DUPLICATE_TASK_ID",
+    "stage": "resolution",
+    "severity": "error",
+    "messageKey": "diagnostics.duplicateTaskId",
+    "summary": "Task ID is duplicated.",
+    "primaryRange": {
+      "start": {
+        "offset": 43,
+        "line": 3,
+        "column": 10
+      },
+      "end": {
+        "offset": 45,
+        "line": 3,
+        "column": 12
+      }
+    },
+    "primaryRaw": "t1",
+    "suggestedActions": [
+      {
+        "kind": "manual-edit",
+        "labelKey": "diagnostics.action.renameTaskId",
+        "labelText": "Rename this task ID."
+      },
+      {
+        "kind": "quick-fix",
+        "labelKey": "diagnostics.action.renameDuplicateTaskId",
+        "replacement": {
+          "range": {
+            "start": {
+              "offset": 43,
+              "line": 3,
+              "column": 10
+            },
+            "end": {
+              "offset": 45,
+              "line": 3,
+              "column": 12
+            }
+          },
+          "text": "t1-2"
+        }
+      }
+    ],
+    "relatedRanges": [
+      {
+        "start": {
+          "offset": 15,
+          "line": 2,
+          "column": 10
+        },
+        "end": {
+          "offset": 17,
+          "line": 2,
+          "column": 12
+        },
+        "raw": "t1"
+      }
+    ]
+  }
+]

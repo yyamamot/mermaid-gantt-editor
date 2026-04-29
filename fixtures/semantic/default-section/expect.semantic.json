@@ -1,0 +1,51 @@
+{
+  "kind": "SemanticDocument",
+  "settings": {},
+  "sections": [
+    {
+      "id": "__default__",
+      "label": "",
+      "implicit": true,
+      "sourceLabelRaw": "",
+      "displayLabel": "",
+      "previewLabelPolicy": "truncate-with-tooltip",
+      "taskNodeIds": [
+        "i2"
+      ],
+      "tasks": [
+        {
+          "nodeId": "i2",
+          "label": "Orphan",
+          "sourceLabelRaw": "Orphan",
+          "displayLabel": "Orphan",
+          "previewLabelPolicy": "truncate-with-tooltip",
+          "tags": [],
+          "duration": "1d"
+        }
+      ]
+    },
+    {
+      "id": "section-0",
+      "label": "Phase 1",
+      "sourceNodeId": "i3",
+      "sourceLabelRaw": "Phase 1",
+      "displayLabel": "Phase 1",
+      "previewLabelPolicy": "truncate-with-tooltip",
+      "taskNodeIds": [
+        "i4"
+      ],
+      "tasks": [
+        {
+          "nodeId": "i4",
+          "label": "Task A",
+          "sourceLabelRaw": "Task A",
+          "displayLabel": "Task A",
+          "previewLabelPolicy": "truncate-with-tooltip",
+          "tags": [],
+          "duration": "2d"
+        }
+      ]
+    }
+  ],
+  "projectionIssues": []
+}

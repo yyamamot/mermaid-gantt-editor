@@ -1,0 +1,9 @@
+{
+  "required": [
+    "emit/normalized-basic",
+    "emit/normalized-default-section",
+    "emit/normalized-label-policy",
+    "emit/lossless-patch-label"
+  ],
+  "planned": []
+}

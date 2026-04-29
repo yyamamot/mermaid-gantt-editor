@@ -1,0 +1,200 @@
+{
+  "fixtureId": "lossless/comment-lines",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "BlankLine",
+      "raw": "\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 7,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "source",
+      "projectable": true,
+      "errors": []
+    },
+    {
+      "nodeId": "i3",
+      "kind": "CommentLine",
+      "raw": "%% section comment\n",
+      "range": {
+        "start": {
+          "offset": 7,
+          "line": 3,
+          "column": 1
+        },
+        "end": {
+          "offset": 26,
+          "line": 4,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "commentRaw": "%% section comment"
+      }
+    },
+    {
+      "nodeId": "i4",
+      "kind": "SectionStmt",
+      "raw": "section Phase 1\n",
+      "range": {
+        "start": {
+          "offset": 26,
+          "line": 4,
+          "column": 1
+        },
+        "end": {
+          "offset": 42,
+          "line": 5,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "labelRaw": "Phase 1"
+      }
+    },
+    {
+      "nodeId": "i5",
+      "kind": "TaskStmt",
+      "raw": "Task A : 3d\n",
+      "range": {
+        "start": {
+          "offset": 42,
+          "line": 5,
+          "column": 1
+        },
+        "end": {
+          "offset": 54,
+          "line": 6,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task A",
+          "range": {
+            "start": {
+              "offset": 42,
+              "line": 5,
+              "column": 1
+            },
+            "end": {
+              "offset": 48,
+              "line": 5,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 49,
+              "line": 5,
+              "column": 8
+            },
+            "end": {
+              "offset": 50,
+              "line": 5,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 51,
+                "line": 5,
+                "column": 10
+              },
+              "end": {
+                "offset": 53,
+                "line": 5,
+                "column": 12
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 51,
+                "line": 5,
+                "column": 10
+              },
+              "end": {
+                "offset": 53,
+                "line": 5,
+                "column": 12
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "blank-line",
+    "comment",
+    "statement-keyword",
+    "statement-value",
+    "task-label",
+    "task-colon",
+    "task-duration"
+  ]
+}

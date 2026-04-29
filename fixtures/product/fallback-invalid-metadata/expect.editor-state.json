@@ -1,0 +1,23 @@
+{
+  "mode": "fallback",
+  "source": "gantt\nTask A : a1, 3dX\n",
+  "previewAvailable": false,
+  "rowLabels": [
+    "Task A"
+  ],
+  "rowIds": [
+    "a1"
+  ],
+  "rowDependencies": [
+    []
+  ],
+  "advancedKinds": [],
+  "diagnosticCodes": [
+    "INVALID_DURATION_TOKEN",
+    "RAW_TASK_METADATA"
+  ],
+  "projectionIssueCodes": [
+    "parse-INVALID_DURATION_TOKEN",
+    "raw-task-metadata"
+  ]
+}

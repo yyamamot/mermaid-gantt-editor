@@ -1,0 +1,12 @@
+{
+  "nightlyVisual": [
+    "fixtures/harness/nightly-visual-smoke/scenario.json",
+    "fixtures/harness/nightly-visual-task-grid-no-tags/scenario.json",
+    "fixtures/harness/nightly-visual-diagnostics/scenario.json",
+    "fixtures/harness/nightly-visual-fallback/scenario.json",
+    "fixtures/harness/nightly-visual-limited-editing/scenario.json",
+    "fixtures/harness/nightly-visual-preview-resize/scenario.json",
+    "fixtures/harness/nightly-visual-preview-pan/scenario.json",
+    "fixtures/harness/nightly-visual-ja-responsive/scenario.json"
+  ]
+}

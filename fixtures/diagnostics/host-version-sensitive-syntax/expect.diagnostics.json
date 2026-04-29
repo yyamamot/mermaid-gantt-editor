@@ -1,0 +1,49 @@
+[
+  {
+    "code": "HOST_VERSION_SENSITIVE_SYNTAX",
+    "stage": "resolution",
+    "severity": "warning",
+    "messageKey": "diagnostics.hostVersionSensitiveSyntax",
+    "summary": "displayMode compact can depend on the Mermaid host version.",
+    "primaryRange": {
+      "start": {
+        "offset": 25,
+        "line": 4,
+        "column": 5
+      },
+      "end": {
+        "offset": 45,
+        "line": 4,
+        "column": 25
+      }
+    },
+    "primaryRaw": "displayMode: compact",
+    "suggestedActions": [
+      {
+        "kind": "manual-edit",
+        "labelKey": "diagnostics.action.checkMermaidHostVersion",
+        "labelText": "Review Mermaid host version compatibility."
+      },
+      {
+        "kind": "quick-fix",
+        "labelKey": "diagnostics.action.commentOutCompactDisplayMode",
+        "labelText": "Comment out compact display mode",
+        "replacement": {
+          "range": {
+            "start": {
+              "offset": 25,
+              "line": 4,
+              "column": 5
+            },
+            "end": {
+              "offset": 45,
+              "line": 4,
+              "column": 25
+            }
+          },
+          "text": "# displayMode: compact"
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "files.exclude": {
+    "**/.tmp": true,
+    "**/.vscode-test": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/out": true
+  },
+  "files.watcherExclude": {
+    "**/.tmp/**": true,
+    "**/.vscode-test/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/out/**": true
+  },
+  "search.exclude": {
+    "**/.tmp": true,
+    "**/.vscode-test": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/out": true
+  }
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "code": "UNDEFINED_DEPENDENCY",
+    "stage": "resolution",
+    "severity": "error",
+    "messageKey": "diagnostics.undefinedDependency",
+    "summary": "Dependency target is not defined.",
+    "primaryRange": {
+      "start": {
+        "offset": 21,
+        "line": 2,
+        "column": 16
+      },
+      "end": {
+        "offset": 28,
+        "line": 2,
+        "column": 23
+      }
+    },
+    "primaryRaw": "missing",
+    "suggestedActions": [
+      {
+        "kind": "manual-edit",
+        "labelKey": "diagnostics.action.chooseExistingTaskId",
+        "labelText": "Choose an existing task ID."
+      }
+    ]
+  }
+]

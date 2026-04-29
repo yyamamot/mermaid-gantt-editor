@@ -1,0 +1,65 @@
+{
+  "kind": "SemanticDocument",
+  "settings": {
+    "title": "Product Plan",
+    "dateFormat": "YYYY-MM-DD",
+    "axisFormat": "%Y-%m-%d",
+    "tickInterval": "1week",
+    "topAxis": true,
+    "inclusiveEndDates": true,
+    "includes": [
+      "2026-01-01"
+    ],
+    "excludes": [
+      "weekends"
+    ],
+    "weekday": "monday",
+    "weekend": "friday",
+    "todayMarker": "stroke:#f00"
+  },
+  "sections": [
+    {
+      "id": "__default__",
+      "label": "",
+      "implicit": true,
+      "sourceLabelRaw": "",
+      "displayLabel": "",
+      "previewLabelPolicy": "truncate-with-tooltip",
+      "taskNodeIds": [
+        "i13",
+        "i14"
+      ],
+      "tasks": [
+        {
+          "nodeId": "i13",
+          "label": "Task A",
+          "sourceLabelRaw": "Task A",
+          "displayLabel": "Task A",
+          "previewLabelPolicy": "truncate-with-tooltip",
+          "tags": [
+            "done",
+            "crit",
+            "milestone"
+          ],
+          "milestone": true,
+          "id": "a1",
+          "start": "2026-01-01",
+          "duration": "0d"
+        },
+        {
+          "nodeId": "i14",
+          "label": "Task B",
+          "sourceLabelRaw": "Task B",
+          "displayLabel": "Task B",
+          "previewLabelPolicy": "truncate-with-tooltip",
+          "tags": [],
+          "after": [
+            "a1"
+          ],
+          "duration": "2d"
+        }
+      ]
+    }
+  ],
+  "projectionIssues": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "nightly-visual-limited-editing",
+  "fixture": "fixtures/product/limited-editing-advanced-items/source.mmd",
+  "expectedMode": "structured",
+  "steps": [
+    {
+      "id": "open-fixture",
+      "type": "open-fixture"
+    },
+    {
+      "id": "open-task-grid",
+      "type": "run-command",
+      "command": "mermaidGantt.openTaskGrid"
+    },
+    {
+      "id": "get-editor-snapshot",
+      "type": "run-command",
+      "command": "mermaidGantt.test.getEditorSnapshot"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "mode",
+      "expected": "structured"
+    },
+    {
+      "type": "preview-source",
+      "expected": "blocked"
+    },
+    {
+      "type": "diagnostic",
+      "code": "UNSUPPORTED_DIRECTIVEBLOCK",
+      "minCount": 1
+    },
+    {
+      "type": "diagnostic",
+      "code": "UNSUPPORTED_CLICKSTMT",
+      "minCount": 1
+    }
+  ]
+}

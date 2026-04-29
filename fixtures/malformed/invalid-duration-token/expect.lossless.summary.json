@@ -1,0 +1,210 @@
+{
+  "fixtureId": "malformed/invalid-duration-token",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "TaskStmt",
+      "raw": "Task : 3dX\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 17,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 10,
+              "line": 2,
+              "column": 5
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 11,
+              "line": 2,
+              "column": 6
+            },
+            "end": {
+              "offset": 12,
+              "line": 2,
+              "column": 7
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "RawMetaSlice",
+            "raw": "3dX",
+            "range": {
+              "start": {
+                "offset": 13,
+                "line": 2,
+                "column": 8
+              },
+              "end": {
+                "offset": 16,
+                "line": 2,
+                "column": 11
+              }
+            },
+            "valueRaw": "3dX",
+            "errors": [
+              {
+                "severity": "error",
+                "code": "INVALID_DURATION_TOKEN",
+                "message": "Duration-like metadata is invalid: 3dX",
+                "range": {
+                  "start": {
+                    "offset": 13,
+                    "line": 2,
+                    "column": 8
+                  },
+                  "end": {
+                    "offset": 16,
+                    "line": 2,
+                    "column": 11
+                  }
+                },
+                "stage": "parse",
+                "instruction": {
+                  "summary": "Use a valid duration such as `3d`, `2w`, `1month`, or keep the value as raw text.",
+                  "primaryRange": {
+                    "start": {
+                      "offset": 13,
+                      "line": 2,
+                      "column": 8
+                    },
+                    "end": {
+                      "offset": 16,
+                      "line": 2,
+                      "column": 11
+                    }
+                  },
+                  "suggestedActions": [
+                    {
+                      "kind": "manual-edit",
+                      "label": "Use a valid duration such as `3d`, `2w`, `1month`, or keep the value as raw text."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "RawMetaSlice",
+            "raw": "3dX",
+            "range": {
+              "start": {
+                "offset": 13,
+                "line": 2,
+                "column": 8
+              },
+              "end": {
+                "offset": 16,
+                "line": 2,
+                "column": 11
+              }
+            },
+            "valueRaw": "3dX",
+            "errors": [
+              {
+                "severity": "error",
+                "code": "INVALID_DURATION_TOKEN",
+                "message": "Duration-like metadata is invalid: 3dX",
+                "range": {
+                  "start": {
+                    "offset": 13,
+                    "line": 2,
+                    "column": 8
+                  },
+                  "end": {
+                    "offset": 16,
+                    "line": 2,
+                    "column": 11
+                  }
+                },
+                "stage": "parse",
+                "instruction": {
+                  "summary": "Use a valid duration such as `3d`, `2w`, `1month`, or keep the value as raw text.",
+                  "primaryRange": {
+                    "start": {
+                      "offset": 13,
+                      "line": 2,
+                      "column": 8
+                    },
+                    "end": {
+                      "offset": 16,
+                      "line": 2,
+                      "column": 11
+                    }
+                  },
+                  "suggestedActions": [
+                    {
+                      "kind": "manual-edit",
+                      "label": "Use a valid duration such as `3d`, `2w`, `1month`, or keep the value as raw text."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "task-label",
+    "task-colon",
+    "unknown-fragment"
+  ]
+}

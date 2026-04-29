@@ -1,0 +1,732 @@
+{
+  "fixtureId": "lossless/task-after-multi",
+  "items": [
+    {
+      "nodeId": "i1",
+      "kind": "DiagramKeyword",
+      "raw": "gantt\n",
+      "range": {
+        "start": {
+          "offset": 0,
+          "line": 1,
+          "column": 1
+        },
+        "end": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "keywordRaw": "gantt",
+        "targetDiagram": true
+      }
+    },
+    {
+      "nodeId": "i2",
+      "kind": "TaskStmt",
+      "raw": "Task A : a1, 2026-01-01, 3d\n",
+      "range": {
+        "start": {
+          "offset": 6,
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "offset": 34,
+          "line": 3,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task A",
+          "range": {
+            "start": {
+              "offset": 6,
+              "line": 2,
+              "column": 1
+            },
+            "end": {
+              "offset": 12,
+              "line": 2,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 13,
+              "line": 2,
+              "column": 8
+            },
+            "end": {
+              "offset": 14,
+              "line": 2,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "IdMetaSlice",
+            "raw": "a1",
+            "range": {
+              "start": {
+                "offset": 15,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              }
+            },
+            "valueRaw": "a1",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              },
+              "end": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 17,
+                  "line": 2,
+                  "column": 12
+                },
+                "end": {
+                  "offset": 18,
+                  "line": 2,
+                  "column": 13
+                }
+              }
+            }
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              },
+              "end": {
+                "offset": 29,
+                "line": 2,
+                "column": 24
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 29,
+                "line": 2,
+                "column": 24
+              },
+              "end": {
+                "offset": 31,
+                "line": 2,
+                "column": 26
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 29,
+                  "line": 2,
+                  "column": 24
+                },
+                "end": {
+                  "offset": 30,
+                  "line": 2,
+                  "column": 25
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 31,
+                "line": 2,
+                "column": 26
+              },
+              "end": {
+                "offset": 33,
+                "line": 2,
+                "column": 28
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "IdMetaSlice",
+            "raw": "a1",
+            "range": {
+              "start": {
+                "offset": 15,
+                "line": 2,
+                "column": 10
+              },
+              "end": {
+                "offset": 17,
+                "line": 2,
+                "column": 12
+              }
+            },
+            "valueRaw": "a1",
+            "errors": []
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-01",
+            "range": {
+              "start": {
+                "offset": 19,
+                "line": 2,
+                "column": 14
+              },
+              "end": {
+                "offset": 29,
+                "line": 2,
+                "column": 24
+              }
+            },
+            "valueRaw": "2026-01-01",
+            "errors": []
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 31,
+                "line": 2,
+                "column": 26
+              },
+              "end": {
+                "offset": 33,
+                "line": 2,
+                "column": 28
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i3",
+      "kind": "TaskStmt",
+      "raw": "Task B : b1, 2026-01-02, 3d\n",
+      "range": {
+        "start": {
+          "offset": 34,
+          "line": 3,
+          "column": 1
+        },
+        "end": {
+          "offset": 62,
+          "line": 4,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task B",
+          "range": {
+            "start": {
+              "offset": 34,
+              "line": 3,
+              "column": 1
+            },
+            "end": {
+              "offset": 40,
+              "line": 3,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 41,
+              "line": 3,
+              "column": 8
+            },
+            "end": {
+              "offset": 42,
+              "line": 3,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "IdMetaSlice",
+            "raw": "b1",
+            "range": {
+              "start": {
+                "offset": 43,
+                "line": 3,
+                "column": 10
+              },
+              "end": {
+                "offset": 45,
+                "line": 3,
+                "column": 12
+              }
+            },
+            "valueRaw": "b1",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 45,
+                "line": 3,
+                "column": 12
+              },
+              "end": {
+                "offset": 47,
+                "line": 3,
+                "column": 14
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 45,
+                  "line": 3,
+                  "column": 12
+                },
+                "end": {
+                  "offset": 46,
+                  "line": 3,
+                  "column": 13
+                }
+              }
+            }
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-02",
+            "range": {
+              "start": {
+                "offset": 47,
+                "line": 3,
+                "column": 14
+              },
+              "end": {
+                "offset": 57,
+                "line": 3,
+                "column": 24
+              }
+            },
+            "valueRaw": "2026-01-02",
+            "errors": []
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 57,
+                "line": 3,
+                "column": 24
+              },
+              "end": {
+                "offset": 59,
+                "line": 3,
+                "column": 26
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 57,
+                  "line": 3,
+                  "column": 24
+                },
+                "end": {
+                  "offset": 58,
+                  "line": 3,
+                  "column": 25
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 59,
+                "line": 3,
+                "column": 26
+              },
+              "end": {
+                "offset": 61,
+                "line": 3,
+                "column": 28
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "IdMetaSlice",
+            "raw": "b1",
+            "range": {
+              "start": {
+                "offset": 43,
+                "line": 3,
+                "column": 10
+              },
+              "end": {
+                "offset": 45,
+                "line": 3,
+                "column": 12
+              }
+            },
+            "valueRaw": "b1",
+            "errors": []
+          },
+          {
+            "kind": "DateMetaSlice",
+            "raw": "2026-01-02",
+            "range": {
+              "start": {
+                "offset": 47,
+                "line": 3,
+                "column": 14
+              },
+              "end": {
+                "offset": 57,
+                "line": 3,
+                "column": 24
+              }
+            },
+            "valueRaw": "2026-01-02",
+            "errors": []
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "3d",
+            "range": {
+              "start": {
+                "offset": 59,
+                "line": 3,
+                "column": 26
+              },
+              "end": {
+                "offset": 61,
+                "line": 3,
+                "column": 28
+              }
+            },
+            "valueRaw": "3d",
+            "errors": []
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "i4",
+      "kind": "TaskStmt",
+      "raw": "Task C : after a1 b1, 2d\n",
+      "range": {
+        "start": {
+          "offset": 62,
+          "line": 4,
+          "column": 1
+        },
+        "end": {
+          "offset": 87,
+          "line": 5,
+          "column": 1
+        }
+      },
+      "provenance": "both",
+      "projectable": true,
+      "errors": [],
+      "details": {
+        "label": {
+          "raw": "Task C",
+          "range": {
+            "start": {
+              "offset": 62,
+              "line": 4,
+              "column": 1
+            },
+            "end": {
+              "offset": 68,
+              "line": 4,
+              "column": 7
+            }
+          }
+        },
+        "colon": {
+          "kind": "task-colon",
+          "raw": ":",
+          "range": {
+            "start": {
+              "offset": 69,
+              "line": 4,
+              "column": 8
+            },
+            "end": {
+              "offset": 70,
+              "line": 4,
+              "column": 9
+            }
+          }
+        },
+        "metaParts": [
+          {
+            "kind": "AfterMetaSlice",
+            "raw": "after a1 b1",
+            "range": {
+              "start": {
+                "offset": 71,
+                "line": 4,
+                "column": 10
+              },
+              "end": {
+                "offset": 82,
+                "line": 4,
+                "column": 21
+              }
+            },
+            "valueRaw": "after a1 b1",
+            "errors": [],
+            "refs": [
+              {
+                "raw": "a1",
+                "range": {
+                  "start": {
+                    "offset": 77,
+                    "line": 4,
+                    "column": 16
+                  },
+                  "end": {
+                    "offset": 79,
+                    "line": 4,
+                    "column": 18
+                  }
+                }
+              },
+              {
+                "raw": "b1",
+                "range": {
+                  "start": {
+                    "offset": 80,
+                    "line": 4,
+                    "column": 19
+                  },
+                  "end": {
+                    "offset": 82,
+                    "line": 4,
+                    "column": 21
+                  }
+                }
+              }
+            ],
+            "refsRaw": [
+              "a1",
+              "b1"
+            ]
+          },
+          {
+            "kind": "TaskMetaSeparator",
+            "raw": ", ",
+            "range": {
+              "start": {
+                "offset": 82,
+                "line": 4,
+                "column": 21
+              },
+              "end": {
+                "offset": 84,
+                "line": 4,
+                "column": 23
+              }
+            },
+            "comma": {
+              "kind": "task-comma",
+              "raw": ",",
+              "range": {
+                "start": {
+                  "offset": 82,
+                  "line": 4,
+                  "column": 21
+                },
+                "end": {
+                  "offset": 83,
+                  "line": 4,
+                  "column": 22
+                }
+              }
+            }
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "2d",
+            "range": {
+              "start": {
+                "offset": 84,
+                "line": 4,
+                "column": 23
+              },
+              "end": {
+                "offset": 86,
+                "line": 4,
+                "column": 25
+              }
+            },
+            "valueRaw": "2d",
+            "errors": []
+          }
+        ],
+        "metaItems": [
+          {
+            "kind": "AfterMetaSlice",
+            "raw": "after a1 b1",
+            "range": {
+              "start": {
+                "offset": 71,
+                "line": 4,
+                "column": 10
+              },
+              "end": {
+                "offset": 82,
+                "line": 4,
+                "column": 21
+              }
+            },
+            "valueRaw": "after a1 b1",
+            "errors": [],
+            "refs": [
+              {
+                "raw": "a1",
+                "range": {
+                  "start": {
+                    "offset": 77,
+                    "line": 4,
+                    "column": 16
+                  },
+                  "end": {
+                    "offset": 79,
+                    "line": 4,
+                    "column": 18
+                  }
+                }
+              },
+              {
+                "raw": "b1",
+                "range": {
+                  "start": {
+                    "offset": 80,
+                    "line": 4,
+                    "column": 19
+                  },
+                  "end": {
+                    "offset": 82,
+                    "line": 4,
+                    "column": 21
+                  }
+                }
+              }
+            ],
+            "refsRaw": [
+              "a1",
+              "b1"
+            ]
+          },
+          {
+            "kind": "DurationMetaSlice",
+            "raw": "2d",
+            "range": {
+              "start": {
+                "offset": 84,
+                "line": 4,
+                "column": 23
+              },
+              "end": {
+                "offset": 86,
+                "line": 4,
+                "column": 25
+              }
+            },
+            "valueRaw": "2d",
+            "errors": []
+          }
+        ]
+      }
+    }
+  ],
+  "documentErrors": [],
+  "tokenKindsSeen": [
+    "diagram-keyword",
+    "newline",
+    "task-label",
+    "task-colon",
+    "task-id",
+    "task-comma",
+    "task-date",
+    "task-duration",
+    "task-after-keyword"
+  ]
+}
