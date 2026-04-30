@@ -15,6 +15,12 @@ Task Grid で task label、ID、日付、期間、依存関係、タグを編集
   <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-task-grid.png" alt="Mermaid Gantt Editor Task Grid" width="960">
 </p>
 
+## ブラウザで試す
+
+静的サイト版は [mermaid-gantt-editor.pages.dev](https://mermaid-gantt-editor.pages.dev/) で試せます。VS Code 拡張をインストールせずに、Task Grid、Mermaid Preview、source-safe editing、share、download の挙動を確認できます。
+
+静的サイト版は編集体験の確認に向いています。Markdown CodeLens 連携や、ローカルの `.mmd` / Markdown file への書き戻しが必要な場合は VS Code 拡張を使ってください。
+
 ## この拡張でできること
 
 - standalone `.mmd` Mermaid Gantt file を Gantt Editor で開く

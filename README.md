@@ -15,6 +15,12 @@ It is designed for development teams that keep implementation plans, release pla
   <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-task-grid.png" alt="Mermaid Gantt Editor Task Grid" width="960">
 </p>
 
+## Try It in Your Browser
+
+Try the static web version at [mermaid-gantt-editor.pages.dev](https://mermaid-gantt-editor.pages.dev/) to see the Task Grid, Mermaid Preview, source-safe editing flow, share, and download behavior without installing the VS Code extension.
+
+The static site is useful for evaluating the editor experience. Use the VS Code extension when you want Markdown CodeLens integration and write-back to local `.mmd` or Markdown files.
+
 ## What You Can Do
 
 - Open standalone `.mmd` Mermaid Gantt files in the Gantt Editor

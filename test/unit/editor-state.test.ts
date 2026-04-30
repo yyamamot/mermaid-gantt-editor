@@ -688,12 +688,39 @@ describe("applyEditorAction", () => {
     });
   });
 
+  it("replaces absolute start date with dependency metadata when duration can be preserved", () => {
+    const state = createEditorState(parseGanttLossless([
+      "gantt",
+      "Task A : a1, 2026-01-01, 3d",
+      "Task B : b1, 2026-01-04, 2d"
+    ].join("\n") + "\n"));
+    const taskNodeId = state.grid.rows[1]?.nodeId ?? "";
+    const result = applyEditorAction(state, {
+      type: "update-task-dependencies",
+      nodeId: taskNodeId,
+      refs: ["a1"]
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.state.source).toBe([
+      "gantt",
+      "Task A : a1, 2026-01-01, 3d",
+      "Task B : b1, after a1, 2d",
+      ""
+    ].join("\n"));
+    expect(result.state.source).not.toContain("Task B : b1, 2026-01-04");
+    expect(result.state.grid.rows[1]).toMatchObject({
+      duration: "2d",
+      dependencies: ["a1"]
+    });
+  });
+
   it("blocks dependency append when task metadata has no free slot", () => {
     const state = createEditorState(parseGanttLossless([
       "gantt",
       "section Planning",
       "Task A : a1, 2026-01-01, 1d",
-      "Task B : b1, 2026-01-02, 2d"
+      "Task B : b1, 2026-01-02, 2026-01-04"
     ].join("\n") + "\n"));
     const taskNodeId = state.grid.rows[1]?.nodeId ?? "";
     const result = applyEditorAction(state, {
@@ -1549,6 +1576,43 @@ describe("applyEditorAction", () => {
       duration: "2d"
     });
 
+    expect(result.state.source).toBe("gantt\nTask A : a1, 2026-01-01, 2d\n");
+    expect(result.state.grid.rows[0]).toMatchObject({
+      start: "2026-01-01",
+      duration: "2d"
+    });
+  });
+
+  it("switches duration-only schedule to start and duration when start is set", () => {
+    const state = createEditorState(parseGanttLossless("gantt\nTask A : a1, 1d\n"));
+    const taskNodeId = state.grid.rows[0]?.nodeId ?? "";
+    const result = applyEditorAction(state, {
+      type: "update-task-schedule",
+      nodeId: taskNodeId,
+      start: "2026-01-01"
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.sourceChanged).toBe(true);
+    expect(result.state.source).toBe("gantt\nTask A : a1, 2026-01-01, 1d\n");
+    expect(result.state.grid.rows[0]).toMatchObject({
+      start: "2026-01-01",
+      duration: "1d"
+    });
+  });
+
+  it("switches duration-only schedule to start and updated duration when start and duration are set", () => {
+    const state = createEditorState(parseGanttLossless("gantt\nTask A : a1, 1d\n"));
+    const taskNodeId = state.grid.rows[0]?.nodeId ?? "";
+    const result = applyEditorAction(state, {
+      type: "update-task-schedule",
+      nodeId: taskNodeId,
+      start: "2026-01-01",
+      duration: "2d"
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.sourceChanged).toBe(true);
     expect(result.state.source).toBe("gantt\nTask A : a1, 2026-01-01, 2d\n");
     expect(result.state.grid.rows[0]).toMatchObject({
       start: "2026-01-01",

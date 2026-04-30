@@ -651,6 +651,7 @@ function updateTaskSchedule(
   const dateItems = task.metaItems.filter((item): item is DateMetaSlice => item.kind === "DateMetaSlice");
   const duration = task.metaItems.find((item): item is DurationMetaSlice => item.kind === "DurationMetaSlice");
   const dependencyAnchors = task.metaItems.filter((item) => item.kind === "AfterMetaSlice" || item.kind === "UntilMetaSlice");
+  const startRewritesDurationOnly = Boolean(patch.start?.trim() && duration && !dateItems[0] && dependencyAnchors.length === 0);
   const patches: Array<{ range: Range; text: string }> = [];
 
   const durationText = patch.duration?.trim();
@@ -686,6 +687,13 @@ function updateTaskSchedule(
       patches.push(...createRemoveStartDatePatches(task, dateItems));
     } else if (dateItems[0]) {
       patches.push({ range: dateItems[0].range, text });
+    } else if (duration && dependencyAnchors.length === 0) {
+      const tailText = patch.end !== undefined
+        ? patch.end.trim()
+        : patch.duration !== undefined
+          ? patch.duration.trim()
+          : duration.valueRaw;
+      patches.push({ range: duration.range, text: tailText ? `${text}, ${tailText}` : text });
     } else if (dependencyAnchors.length > 0) {
       patches.push({ range: dependencyAnchors[0]!.range, text });
       patches.push(...dependencyAnchors.slice(1).flatMap((item) => {
@@ -718,6 +726,8 @@ function updateTaskSchedule(
       patches.push({ range: dependencyAnchors[0].range, text });
     } else if (dateItems[0] && canAppendNonTagTaskMeta(task)) {
       patches.push(createAppendMetaPatch(task, text));
+    } else if (startRewritesDurationOnly) {
+      // The start branch already rewrites `duration` into `start, end`.
     } else if (patch.start?.trim() && duration) {
       patches.push({ range: duration.range, text });
     } else if (patch.start?.trim()) {
@@ -738,6 +748,8 @@ function updateTaskSchedule(
       if (removePatch) {
         patches.push(removePatch);
       }
+    } else if (startRewritesDurationOnly) {
+      // The start branch already rewrites `duration` into `start, duration`.
     } else if (duration) {
       patches.push({ range: duration.range, text });
     } else if (dateItems[1]) {
@@ -790,7 +802,10 @@ function updateTaskDependencies(state: EditorState, nodeId: string, refs: string
   }
 
   const after = task.metaItems.find((item) => item.kind === "AfterMetaSlice");
-  if (!after && !canAppendNonTagTaskMeta(task)) {
+  const dateItems = task.metaItems.filter((item): item is DateMetaSlice => item.kind === "DateMetaSlice");
+  const duration = task.metaItems.find((item): item is DurationMetaSlice => item.kind === "DurationMetaSlice");
+  const canReplaceStartWithDependency = Boolean(dateItems[0] && duration);
+  if (!after && !canReplaceStartWithDependency && !canAppendNonTagTaskMeta(task)) {
     return actionBlocked(
       state,
       "EDITOR_TASK_METADATA_LIMIT",
@@ -799,14 +814,19 @@ function updateTaskDependencies(state: EditorState, nodeId: string, refs: string
     );
   }
   const text = `after ${refs.join(" ")}`;
-  const patch = after
-    ? { range: after.range, text }
-    : createAppendMetaPatch(task, text);
-  const diagnostic = validatePatchRanges(document, [patch.range]);
+  const patches = after
+    ? [
+        { range: after.range, text },
+        ...(canReplaceStartWithDependency ? createRemoveStartDatePatches(task, dateItems) : [])
+      ]
+    : canReplaceStartWithDependency
+      ? [{ range: dateItems[0]!.range, text }]
+      : [createAppendMetaPatch(task, text)];
+  const diagnostic = validatePatchRanges(document, patches.map((patch) => patch.range));
   if (diagnostic) {
     return { state, sourceChanged: false, diagnostics: [diagnostic] };
   }
-  const source = applyDescendingPatches(document.source, [patch]);
+  const source = applyDescendingPatches(document.source, patches);
   return sourceUpdateResult(source, { kind: "task", nodeId }, source !== state.source);
 }
 
