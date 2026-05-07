@@ -126,8 +126,10 @@ export function evaluateUiReviewSnapshot(snapshot: UiReviewSnapshot): UiReviewCh
   const checks: UiReviewCheck[] = [];
   const visibleElements = snapshot.geometry.elements.filter((element) => element.visible);
   const byReviewId = new Map(snapshot.geometry.elements.map((element) => [element.reviewId, element]));
+  const formatReview = byReviewId.get("format-review");
+  const formatReviewActive = Boolean(formatReview?.visible && formatReview.rect.width > 0 && formatReview.rect.height > 0);
 
-  for (const id of ["shell", "task-grid", "preview-pane"]) {
+  for (const id of formatReviewActive ? ["shell", "format-review"] : ["shell", "task-grid", "preview-pane"]) {
     const element = byReviewId.get(id);
     const intentionallyHidden = id === "task-grid" && snapshot.selfReview.previewFocused === true;
     checks.push({
@@ -248,7 +250,7 @@ export function evaluateUiReviewSnapshot(snapshot: UiReviewSnapshot): UiReviewCh
     });
   }
 
-  if (snapshot.selfReview.previewCollapsed) {
+  if (snapshot.selfReview.previewCollapsed && !formatReviewActive) {
     const previewBox = byReviewId.get("preview-box");
     const previewControls = byReviewId.get("preview-controls");
     checks.push({

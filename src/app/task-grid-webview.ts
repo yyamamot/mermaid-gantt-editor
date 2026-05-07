@@ -48,6 +48,7 @@ export interface TaskGridWebviewLabels {
   layout: string;
   horizontal: string;
   vertical: string;
+  format: string;
   previewControls: string;
   previewFit: string;
   previewFill: string;
@@ -57,6 +58,10 @@ export interface TaskGridWebviewLabels {
   previewZoomOut: string;
   previewResetZoom: string;
   previewZoomIn: string;
+  previewExport: string;
+  previewExportSvg: string;
+  previewExportPng: string;
+  previewExportUnavailable: string;
   previewEdit: string;
   previewEditDone: string;
   previewEditGuidance: string;
@@ -100,7 +105,6 @@ export interface TaskGridWebviewLabels {
   todayMarker: string;
   topAxis: string;
   inclusiveEndDates: string;
-  previewSource: string;
   previewDiagram: string;
   advancedSourceItems: string;
   section: string;
@@ -118,6 +122,13 @@ export interface TaskGridWebviewLabels {
   actions: string;
   undo: string;
   redo: string;
+  formatSource: string;
+  formatPreview: string;
+  formatPreviewSummary: string;
+  applyFormatting: string;
+  cancelFormatting: string;
+  beforeFormatting: string;
+  afterFormatting: string;
   addSection: string;
   addSectionBelow: string;
   addTask: string;
@@ -134,7 +145,6 @@ export interface TaskGridWebviewLabels {
   deleteTaskConfirm: string;
   deleteSection: string;
   deleteSectionConfirm: string;
-  rawSourceEditor: string;
   sourceOrder: string;
   noTaskSelected: string;
   noDiagnostics: string;
@@ -147,11 +157,9 @@ export interface TaskGridWebviewLabels {
   previewRenderFailedTitle: string;
   previewOpenDiagnostics: string;
   previewOpenAdvanced: string;
-  previewOpenSource: string;
   webviewErrorTitle: string;
   webviewErrorMessage: string;
   webviewErrorOpenDiagnostics: string;
-  webviewErrorOpenSource: string;
   webviewErrorDismiss: string;
   taskLabelEditor: string;
   taskLabelEditorHelp: string;
@@ -196,7 +204,6 @@ export interface TaskGridWebviewLabels {
   advancedSourceEditability: string;
   advancedSourceRawOnly: string;
   advancedSourceReason: string;
-  advancedSourceOpenSource: string;
   advancedSourceOpenDiagnostics: string;
   diagnosticMessages?: Record<string, string>;
   diagnosticActionLabels?: Record<string, string>;
@@ -216,14 +223,23 @@ export interface TaskGridWebviewOptions {
   initialPreviewEditSelectedNodeId?: string;
   initialPreviewEditViewportStartIso?: string;
   initialPreviewEditViewportEndIso?: string;
+  initialFormatLayout?: "horizontal" | "vertical";
   initialDetailsOpen?: boolean;
-  initialDetailTab?: "settings" | "inspector" | "diagnostics" | "advanced" | "source";
+  initialDetailTab?: "settings" | "inspector" | "diagnostics" | "advanced";
   initialOpenRowActionMenu?: boolean;
   initialOpenDetailsWithRowActionMenu?: boolean;
   initialResponsiveMode?: "narrow";
   enableUiReviewSnapshot?: boolean;
   enableTestWebviewOperations?: boolean;
   testWebviewGeneration?: number;
+  formatPreview?: TaskGridFormatPreview;
+}
+
+export interface TaskGridFormatPreview {
+  before: string;
+  after: string;
+  changedLineCount: number;
+  diagnostics: string[];
 }
 
 export function renderTaskGridHtml(
@@ -264,6 +280,8 @@ export function renderTaskGridHtml(
   const enableTestWebviewOperations = allowEditing && options.enableTestWebviewOperations === true;
   const mermaidModuleUri = options.mermaidModuleUri;
   const initialLayout = options.initialLayout === "vertical" ? "vertical" : "horizontal";
+  const activeView = options.formatPreview ? "format" : "grid";
+  const initialFormatLayout = options.initialFormatLayout === "vertical" ? "vertical" : "horizontal";
   const initialPreviewZoom = normalizeInitialPreviewZoom(options.initialPreviewZoom);
   const initialPreviewCollapsed = options.initialPreviewCollapsed === true;
   const initialPreviewFocused = options.initialPreviewFocused === true && !initialPreviewCollapsed;
@@ -282,7 +300,7 @@ export function renderTaskGridHtml(
   const horizontalOverflowRisk = responsiveMode === "narrow" ||
     rows.some((row) => row.label.length > 28 || row.sectionLabel.length > 24 || row.dependencies.join(" ").length > 24);
   const defaultDetailTab = state.mode === "fallback"
-    ? "source"
+    ? "diagnostics"
     : hasActionableDiagnostics
       ? "diagnostics"
       : !state.previewSource
@@ -529,8 +547,28 @@ export function renderTaskGridHtml(
       align-items: stretch;
       overflow: hidden;
     }
+    .shell.format-reviewing .workspace {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+      width: 100%;
+      max-width: 100%;
+      justify-self: stretch;
+      align-self: stretch;
+    }
+    .shell.format-reviewing {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      padding: 8px 10px;
+    }
+    .shell.format-reviewing header {
+      flex: 0 0 auto;
+    }
     .shell.layout-vertical .workspace {
       grid-template-columns: minmax(36rem, 1fr) minmax(32rem, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+    }
+    .shell.format-reviewing.layout-vertical .workspace {
+      grid-template-columns: minmax(0, 1fr);
       grid-template-rows: minmax(0, 1fr);
     }
     .shell.preview-collapsed .workspace {
@@ -1073,6 +1111,108 @@ export function renderTaskGridHtml(
       color: var(--input-fg);
       background: var(--input-bg);
     }
+    .format-review {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      width: 100%;
+      max-width: none;
+      justify-self: stretch;
+      min-height: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      overflow: hidden;
+    }
+    .format-review-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .format-review-heading {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+    .format-review-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .format-preview-title {
+      margin: 0;
+      font-weight: 700;
+    }
+    .format-preview-summary,
+    .format-preview-warning {
+      margin: 0;
+      color: var(--muted);
+    }
+    .format-preview-warning {
+      color: var(--warn);
+    }
+    .format-diff {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      min-height: 0;
+      padding: 10px;
+      overflow: hidden;
+    }
+    .shell.format-layout-vertical .format-diff,
+    .shell.responsive-narrow .format-diff {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .format-diff section {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .format-diff h3 {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .format-diff pre {
+      max-height: none;
+      min-height: 0;
+      max-width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      white-space: pre;
+      overflow: auto;
+      overflow-wrap: normal;
+    }
+    .format-source-code span {
+      font: inherit;
+      font-style: normal;
+      font-weight: inherit;
+      letter-spacing: inherit;
+    }
+    .tok-keyword { color: #7cc7ff; }
+    .tok-title { color: #e2c678; }
+    .tok-section { color: #8ee2d1; }
+    .tok-label { color: #e6eef2; }
+    .tok-punct { color: #91a4b7; }
+    .tok-date { color: #9adf89; }
+    .tok-duration { color: #c6a8ff; }
+    .tok-status { color: #ffb86b; }
+    .tok-id { color: #9cdcfe; }
+    .tok-link {
+      color: #68d8ef;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+    .tok-comment { color: #708395; }
     .preview-box {
       position: relative;
       min-height: 0;
@@ -1136,6 +1276,74 @@ export function renderTaskGridHtml(
     .preview-status-actions button:focus {
       outline: 1px solid var(--accent);
       outline-offset: 1px;
+    }
+    .preview-export-menu {
+      position: relative;
+      display: inline-flex;
+      flex: 0 0 auto;
+    }
+    .preview-export-menu summary {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 9px;
+      color: var(--text);
+      background: var(--panel-2);
+      font: inherit;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+      cursor: pointer;
+      list-style: none;
+    }
+    .preview-export-menu summary::-webkit-details-marker {
+      display: none;
+    }
+    .preview-export-menu summary::after {
+      content: "⌄";
+      margin-left: 6px;
+      color: var(--muted);
+    }
+    .preview-export-menu[open] summary,
+    .preview-export-menu summary:focus {
+      outline: 1px solid var(--accent);
+      outline-offset: 1px;
+    }
+    .preview-export-menu-popover {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      z-index: 14;
+      display: grid;
+      min-width: 8rem;
+      gap: 2px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--input-bg);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.36);
+    }
+    .preview-export-menu-popover button {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 4px 8px;
+      color: var(--text);
+      background: transparent;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .preview-export-menu-popover button:hover,
+    .preview-export-menu-popover button:focus {
+      border-color: var(--border);
+      background: var(--list-hover-bg);
+      outline: none;
+    }
+    .preview-export-menu-popover button:disabled {
+      color: var(--muted);
+      cursor: not-allowed;
+      opacity: 0.62;
     }
     .webview-error-boundary {
       position: absolute;
@@ -2154,6 +2362,9 @@ export function renderTaskGridHtml(
         grid-template-columns: 1fr;
         grid-template-rows: minmax(24rem, auto) minmax(24rem, auto);
       }
+      .shell.format-reviewing .workspace {
+        grid-template-rows: minmax(36rem, auto);
+      }
       .section-header {
         align-items: stretch;
         flex-direction: column;
@@ -2198,21 +2409,19 @@ export function renderTaskGridHtml(
   </style>
 </head>
 <body>
-  <div class="shell layout-${initialLayout}${responsiveMode === "narrow" ? " responsive-narrow" : ""}${shouldOpenDetails ? " details-open" : ""}${initialPreviewCollapsed ? " preview-collapsed" : ""}${initialPreviewFocused ? " preview-focused" : ""}${initialPreviewEditMode ? " preview-editing" : ""}" data-review-id="shell" data-initial-detail-tab="${escapeHtml(initialDetailTab)}" data-default-layout="${initialLayout}" data-default-preview-collapsed="${initialPreviewCollapsed ? "true" : "false"}" data-default-preview-focused="${initialPreviewFocused ? "true" : "false"}" data-mermaid-runtime="bundled" data-mermaid-runtime-version="${escapeHtml(mermaidRuntimeVersion)}" data-mermaid-security-level="strict">
+  <div class="shell layout-${initialLayout}${activeView === "format" ? ` format-reviewing format-layout-${initialFormatLayout}` : ""}${responsiveMode === "narrow" ? " responsive-narrow" : ""}${shouldOpenDetails ? " details-open" : ""}${initialPreviewCollapsed && activeView !== "format" ? " preview-collapsed" : ""}${initialPreviewFocused && activeView !== "format" ? " preview-focused" : ""}${initialPreviewEditMode && activeView !== "format" ? " preview-editing" : ""}" data-review-id="shell" data-active-view="${escapeHtml(activeView)}" data-initial-detail-tab="${escapeHtml(initialDetailTab)}" data-default-layout="${initialLayout}" data-default-format-layout="${initialFormatLayout}" data-default-preview-collapsed="${initialPreviewCollapsed ? "true" : "false"}" data-default-preview-focused="${initialPreviewFocused ? "true" : "false"}" data-mermaid-runtime="bundled" data-mermaid-runtime-version="${escapeHtml(mermaidRuntimeVersion)}" data-mermaid-security-level="strict">
     <header data-review-id="app-header">
       <h1>${escapeHtml(labels.title)}</h1>
       <div class="header-actions">
-        <div class="layout-toggle" aria-label="${escapeHtml(labels.layout)}">
-          <span class="layout-toggle-label">${escapeHtml(labels.layout)}</span>
-          <button class="layout-option" type="button" data-layout-option="horizontal" aria-pressed="${initialLayout === "horizontal" ? "true" : "false"}">${escapeHtml(labels.horizontal)}</button>
-          <button class="layout-option" type="button" data-layout-option="vertical" aria-pressed="${initialLayout === "vertical" ? "true" : "false"}">${escapeHtml(labels.vertical)}</button>
-        </div>
-        <button id="details-toggle" class="details-toggle" type="button" aria-controls="details-drawer" aria-expanded="${shouldOpenDetails ? "true" : "false"}">${escapeHtml(labels.details)}</button>
+        ${renderHeaderLayoutToggle()}
+        ${activeView === "format" ? "" : `<button class="details-toggle" type="button" data-action="format-source">${escapeHtml(labels.format)}</button>`}
+        ${activeView === "format" ? "" : `<button id="details-toggle" class="details-toggle" type="button" aria-controls="details-drawer" aria-expanded="${shouldOpenDetails ? "true" : "false"}">${escapeHtml(labels.details)}</button>`}
         <span class="badge">${escapeHtml(labels.mode)}: ${escapeHtml(state.mode)}</span>
       </div>
     </header>
     ${renderEditingBanner()}
     <div class="workspace" data-review-id="workspace" style="--task-grid-row-count: ${escapeHtml(String(Math.max(rowCount, 1)))}" data-row-count="${escapeHtml(String(rowCount))}">
+      ${options.formatPreview ? renderFormatReview(options.formatPreview) : `
       <section class="main" data-review-id="task-grid">
         <div class="section-header">
           <h2>${escapeHtml(labels.taskGrid)}</h2>
@@ -2268,6 +2477,13 @@ export function renderTaskGridHtml(
               <button class="preview-zoom-button" type="button" data-preview-zoom="reset" aria-pressed="${initialPreviewZoom === "1" ? "true" : "false"}" aria-label="${escapeHtml(labels.previewResetZoom)}">100%</button>
               <button class="preview-zoom-button" type="button" data-preview-zoom="in" aria-label="${escapeHtml(labels.previewZoomIn)}">＋</button>
             </div>
+            <details class="preview-export-menu" data-review-id="preview-export-menu">
+              <summary>${escapeHtml(labels.previewExport)}</summary>
+              <div class="preview-export-menu-popover" role="menu">
+                <button type="button" role="menuitem" data-action="export-preview-svg"${state.previewSource ? "" : " disabled"}>${escapeHtml(labels.previewExportSvg)}</button>
+                <button type="button" role="menuitem" data-action="export-preview-png"${state.previewSource ? "" : " disabled"}>${escapeHtml(labels.previewExportPng)}</button>
+              </div>
+            </details>
             <button id="preview-edit-toggle" class="preview-zoom-button preview-edit-toggle" data-review-id="preview-edit-toggle" type="button" aria-pressed="${initialPreviewEditMode ? "true" : "false"}" data-edit-label="${escapeHtml(labels.previewEdit)}" data-done-label="${escapeHtml(labels.previewEditDone)}">${escapeHtml(initialPreviewEditMode ? labels.previewEditDone : labels.previewEdit)}</button>
             <button id="preview-focus-toggle" class="icon-button preview-focus-toggle" data-review-id="preview-focus-toggle" type="button" aria-pressed="${initialPreviewFocused ? "true" : "false"}" aria-label="${escapeHtml(initialPreviewFocused ? labels.previewExitFocus : labels.previewFocus)}" title="${escapeHtml(initialPreviewFocused ? labels.previewExitFocus : labels.previewFocus)}" data-focus-label="${escapeHtml(labels.previewFocus)}" data-exit-focus-label="${escapeHtml(labels.previewExitFocus)}">
               <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M16 3h3a2 2 0 0 1 2 2v3"></path><path d="M8 21H5a2 2 0 0 1-2-2v-3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
@@ -2278,10 +2494,11 @@ export function renderTaskGridHtml(
           </div>
         </div>
         <div class="preview-box" data-review-id="preview-box">
-          <div id="mermaid-preview" class="mermaid-preview" data-review-id="mermaid-preview" data-default-preview-zoom="${escapeHtml(initialPreviewZoom)}" aria-label="${escapeHtml(labels.previewPanTooltip)}" title="${escapeHtml(labels.previewPanTooltip)}">${state.previewSource ? escapeHtml(labels.previewSource) : renderPreviewStatusCard("blocked", labels.previewBlockedTitle, labels.previewBlocked, labels)}</div>
+          <div id="mermaid-preview" class="mermaid-preview" data-review-id="mermaid-preview" data-default-preview-zoom="${escapeHtml(initialPreviewZoom)}" aria-label="${escapeHtml(labels.previewPanTooltip)}" title="${escapeHtml(labels.previewPanTooltip)}">${state.previewSource ? escapeHtml(labels.previewDiagram) : renderPreviewStatusCard("blocked", labels.previewBlockedTitle, labels.previewBlocked, labels)}</div>
           ${renderPreviewScheduleOverlay(previewScheduleEditModel, labels, { initialEditMode: initialPreviewEditMode })}
         </div>
       </section>
+      `}
       <aside id="details-drawer" class="details-drawer" data-review-id="details-drawer" role="complementary" aria-label="${escapeHtml(labels.details)}">
         <div class="drawer-header">
           <h2>${escapeHtml(labels.details)}</h2>
@@ -2292,7 +2509,6 @@ export function renderTaskGridHtml(
           <button class="detail-tab" type="button" role="tab" aria-selected="${initialDetailTab === "inspector" ? "true" : "false"}" tabindex="${initialDetailTab === "inspector" ? "0" : "-1"}" aria-controls="detail-panel-inspector" id="detail-tab-inspector" data-review-id="detail-tab-inspector" data-detail-tab="inspector">${escapeHtml(labels.inspector)}</button>
           <button class="detail-tab" type="button" role="tab" aria-selected="${initialDetailTab === "diagnostics" ? "true" : "false"}" tabindex="${initialDetailTab === "diagnostics" ? "0" : "-1"}" aria-controls="detail-panel-diagnostics" id="detail-tab-diagnostics" data-review-id="detail-tab-diagnostics" data-detail-tab="diagnostics">${escapeHtml(labels.diagnostics)}</button>
           <button class="detail-tab" type="button" role="tab" aria-selected="${initialDetailTab === "advanced" ? "true" : "false"}" tabindex="${initialDetailTab === "advanced" ? "0" : "-1"}" aria-controls="detail-panel-advanced" id="detail-tab-advanced" data-review-id="detail-tab-advanced" data-detail-tab="advanced">${escapeHtml(labels.advancedSourceItems)}</button>
-          <button class="detail-tab" type="button" role="tab" aria-selected="${initialDetailTab === "source" ? "true" : "false"}" tabindex="${initialDetailTab === "source" ? "0" : "-1"}" aria-controls="detail-panel-source" id="detail-tab-source" data-review-id="detail-tab-source" data-detail-tab="source">${escapeHtml(state.previewSource ? labels.previewSource : labels.rawSourceEditor)}</button>
         </div>
         <div class="detail-panels">
           <div class="detail-panel" data-detail-panel="settings" id="detail-panel-settings" role="tabpanel" aria-labelledby="detail-tab-settings"${initialDetailTab === "settings" ? "" : " hidden"}>
@@ -2317,12 +2533,6 @@ export function renderTaskGridHtml(
             <h2>${escapeHtml(labels.advancedSourceItems)}</h2>
             ${renderAdvancedSourceItems()}
           </div>
-          <div class="detail-panel" data-detail-panel="source" id="detail-panel-source" role="tabpanel" aria-labelledby="detail-tab-source"${initialDetailTab === "source" ? "" : " hidden"}>
-            <h2>${escapeHtml(state.previewSource ? labels.previewSource : labels.rawSourceEditor)}</h2>
-            ${state.previewSource
-              ? `<pre>${escapeHtml(state.previewSource)}</pre>`
-              : `<textarea class="raw-source" data-action="replace-source">${escapeHtml(state.source)}</textarea>`}
-          </div>
         </div>
       </aside>
       <div id="webview-error-boundary" class="webview-error-boundary" data-review-id="webview-error-boundary" role="alert" hidden>
@@ -2331,7 +2541,6 @@ export function renderTaskGridHtml(
         <pre id="webview-error-summary"></pre>
         <div class="webview-error-actions">
           <button type="button" data-webview-error-tab="diagnostics">${escapeHtml(labels.webviewErrorOpenDiagnostics)}</button>
-          <button type="button" data-webview-error-tab="source">${escapeHtml(labels.webviewErrorOpenSource)}</button>
           <button type="button" data-action="dismiss-webview-error">${escapeHtml(labels.webviewErrorDismiss)}</button>
         </div>
       </div>
@@ -2343,12 +2552,11 @@ export function renderTaskGridHtml(
     renderFailedTitle: labels.previewRenderFailedTitle,
     openDiagnostics: labels.previewOpenDiagnostics,
     openAdvanced: labels.previewOpenAdvanced,
-    openSource: labels.previewOpenSource,
     webviewErrorTitle: labels.webviewErrorTitle,
     webviewErrorMessage: labels.webviewErrorMessage,
     webviewErrorOpenDiagnostics: labels.webviewErrorOpenDiagnostics,
-    webviewErrorOpenSource: labels.webviewErrorOpenSource,
-    webviewErrorDismiss: labels.webviewErrorDismiss
+    webviewErrorDismiss: labels.webviewErrorDismiss,
+    exportUnavailable: labels.previewExportUnavailable
   }, mermaidRuntimeVersion, shouldOpenDetails, initialDetailTab, options.initialDetailTab !== undefined, options.initialOpenDetailsWithRowActionMenu === true, options.enableUiReviewSnapshot === true, enableTestWebviewOperations, options.testWebviewGeneration, previewScheduleEditModel, initialPreviewEditMode, initialPreviewEditSelectedNodeId, options.hostBridgeScript)}
 </body>
 </html>`;
@@ -2436,7 +2644,6 @@ export function renderTaskGridHtml(
         <div><dt>${escapeHtml(labels.advancedSourceReason)}</dt><dd>${escapeHtml(item.reasonCodes.join(", ") || "-")}</dd></div>
       </dl>
       <div class="advanced-source-actions">
-        <button type="button" data-preview-detail-tab="source">${escapeHtml(labels.advancedSourceOpenSource)}</button>
         <button type="button" data-preview-detail-tab="diagnostics">${escapeHtml(labels.advancedSourceOpenDiagnostics)}</button>
       </div>
       <code>${escapeHtml(item.raw.trim() || "(blank)")}</code>
@@ -2972,6 +3179,50 @@ export function renderTaskGridHtml(
     </div>`;
   }
 
+  function renderHeaderLayoutToggle(): string {
+    if (activeView === "format") {
+      return `<div class="layout-toggle" aria-label="${escapeHtml(labels.layout)}">
+          <span class="layout-toggle-label">${escapeHtml(labels.layout)}</span>
+          <button class="layout-option" type="button" data-action="update-format-layout" data-value="horizontal" aria-pressed="${initialFormatLayout === "horizontal" ? "true" : "false"}">${escapeHtml(labels.horizontal)}</button>
+          <button class="layout-option" type="button" data-action="update-format-layout" data-value="vertical" aria-pressed="${initialFormatLayout === "vertical" ? "true" : "false"}">${escapeHtml(labels.vertical)}</button>
+        </div>`;
+    }
+    return `<div class="layout-toggle" aria-label="${escapeHtml(labels.layout)}">
+          <span class="layout-toggle-label">${escapeHtml(labels.layout)}</span>
+          <button class="layout-option" type="button" data-layout-option="horizontal" aria-pressed="${initialLayout === "horizontal" ? "true" : "false"}">${escapeHtml(labels.horizontal)}</button>
+          <button class="layout-option" type="button" data-layout-option="vertical" aria-pressed="${initialLayout === "vertical" ? "true" : "false"}">${escapeHtml(labels.vertical)}</button>
+        </div>`;
+  }
+
+  function renderFormatReview(preview: TaskGridFormatPreview): string {
+    const diagnostics = preview.diagnostics.length > 0
+      ? preview.diagnostics.map((diagnostic) => `<p class="format-preview-warning">${escapeHtml(diagnostic)}</p>`).join("")
+      : "";
+    return `<section class="format-review" data-review-id="format-review">
+      <div class="format-review-header">
+        <div class="format-review-heading">
+          <p class="format-preview-title">${escapeHtml(labels.formatPreview)}</p>
+          <p class="format-preview-summary">${escapeHtml(labels.formatPreviewSummary.replace("{0}", String(preview.changedLineCount)))}</p>
+          ${diagnostics}
+        </div>
+        <div class="format-review-actions">
+          <button class="primary-button" type="button" data-action="apply-format-source">${escapeHtml(labels.applyFormatting)}</button>
+          <button class="secondary-button" type="button" data-action="cancel-format-source">${escapeHtml(labels.cancelFormatting)}</button>
+        </div>
+      </div>
+      <div class="format-diff">
+        <section>
+          <h3>${escapeHtml(labels.beforeFormatting)}</h3>
+          <pre class="format-source-code">${highlightMermaidGanttSource(preview.before)}</pre>
+        </section>
+        <section>
+          <h3>${escapeHtml(labels.afterFormatting)}</h3>
+          <pre class="format-source-code">${highlightMermaidGanttSource(preview.after)}</pre>
+        </section>
+      </div>
+    </section>`;
+  }
+
   function renderAddSectionButton(): string {
     if (!allowStructuredEditing()) {
       return "";
@@ -3106,6 +3357,77 @@ function redoIcon(): string {
   </svg>`;
 }
 
+function sourceToken(className: string, value: string): string {
+  return `<span class="${className}">${escapeHtml(value)}</span>`;
+}
+
+function highlightTaskTail(value: string): string {
+  const tokenPattern = /(https?:\/\/[^\s,]+|\b\d{4}-\d{2}-\d{2}\b|\b\d+(?:d|w|day|days|week|weeks|month|months|y|year|years)\b|\b(?:active|crit|done|milestone|vert)\b|\bafter\b|[A-Za-z][\w-]*)/gi;
+  let output = "";
+  let cursor = 0;
+
+  for (const match of value.matchAll(tokenPattern)) {
+    const index = match.index ?? cursor;
+    const text = match[0] ?? "";
+    output += escapeHtml(value.slice(cursor, index));
+    if (/^https?:\/\//i.test(text)) {
+      output += sourceToken("tok-link", text);
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      output += sourceToken("tok-date", text);
+    } else if (/^\d+(?:d|w|day|days|week|weeks|month|months|y|year|years)$/i.test(text)) {
+      output += sourceToken("tok-duration", text);
+    } else if (/^(?:active|crit|done|milestone|vert)$/i.test(text)) {
+      output += sourceToken("tok-status", text);
+    } else if (/^after$/i.test(text)) {
+      output += sourceToken("tok-keyword", text);
+    } else {
+      output += sourceToken("tok-id", text);
+    }
+    cursor = index + text.length;
+  }
+
+  return output + escapeHtml(value.slice(cursor));
+}
+
+function highlightMermaidGanttLine(line: string): string {
+  if (/^\s*%%/.test(line)) {
+    return sourceToken("tok-comment", line);
+  }
+
+  const directive = /^(\s*)(gantt|title|dateFormat|axisFormat|tickInterval|weekday|excludes|todayMarker|section)\b(.*)$/i.exec(line);
+  if (directive) {
+    const [, indent = "", keyword = "", rest = ""] = directive;
+    const normalizedKeyword = keyword.toLowerCase();
+    const restClass = normalizedKeyword === "title"
+      ? "tok-title"
+      : normalizedKeyword === "section"
+        ? "tok-section"
+        : normalizedKeyword === "dateformat" || normalizedKeyword === "axisformat"
+          ? "tok-date"
+          : "";
+    return [
+      escapeHtml(indent),
+      sourceToken("tok-keyword", keyword),
+      restClass ? sourceToken(restClass, rest) : escapeHtml(rest)
+    ].join("");
+  }
+
+  const colonIndex = line.indexOf(":");
+  if (colonIndex >= 0) {
+    return [
+      sourceToken("tok-label", line.slice(0, colonIndex)),
+      sourceToken("tok-punct", ":"),
+      highlightTaskTail(line.slice(colonIndex + 1))
+    ].join("");
+  }
+
+  return escapeHtml(line);
+}
+
+function highlightMermaidGanttSource(source: string): string {
+  return source.split("\n").map(highlightMermaidGanttLine).join("\n") || "\n";
+}
+
 function summarizeHostCompatibility(state: EditorState, labels: TaskGridWebviewLabels, mermaidRuntimeVersion: string): {
   warningCount: number;
   retainedSourceItemCount: number;
@@ -3186,7 +3508,7 @@ function renderPreviewStatusCard(
   kind: "blocked" | "failed",
   title: string,
   message: string,
-  labels: Pick<TaskGridWebviewLabels, "previewOpenDiagnostics" | "previewOpenAdvanced" | "previewOpenSource">
+  labels: Pick<TaskGridWebviewLabels, "previewOpenDiagnostics" | "previewOpenAdvanced">
 ): string {
   const advancedButton = kind === "blocked"
     ? `<button type="button" data-preview-detail-tab="advanced">${escapeHtml(labels.previewOpenAdvanced)}</button>`
@@ -3197,7 +3519,6 @@ function renderPreviewStatusCard(
     <div class="preview-status-actions">
       <button type="button" data-preview-detail-tab="diagnostics">${escapeHtml(labels.previewOpenDiagnostics)}</button>
       ${advancedButton}
-      <button type="button" data-preview-detail-tab="source">${escapeHtml(labels.previewOpenSource)}</button>
     </div>
   </div>`;
 }
@@ -3212,12 +3533,11 @@ function renderScript(
     renderFailedTitle: string;
     openDiagnostics: string;
     openAdvanced: string;
-    openSource: string;
     webviewErrorTitle: string;
     webviewErrorMessage: string;
     webviewErrorOpenDiagnostics: string;
-    webviewErrorOpenSource: string;
     webviewErrorDismiss: string;
+    exportUnavailable: string;
   },
   mermaidRuntimeVersion: string,
   shouldOpenDetails: boolean,
@@ -3281,6 +3601,7 @@ function renderScript(
   return `<script type="module" nonce="${escapeHtml(nonce)}">
     ${hostBridgeScript}
     const shell = document.querySelector(".shell");
+    const activeView = shell?.dataset.activeView === "format" ? "format" : "grid";
     const detailsToggle = document.getElementById("details-toggle");
     const detailsClose = document.getElementById("details-close");
     const detailsDrawer = document.getElementById("details-drawer");
@@ -3337,6 +3658,86 @@ function renderScript(
         });
       }
       scheduleUiReviewSnapshot("webview-error");
+    }
+    function previewSvgElement() {
+      const svg = previewTarget?.querySelector("svg");
+      return svg instanceof SVGSVGElement ? svg : undefined;
+    }
+    function serializePreviewSvg(svg, width, height) {
+      const clone = svg.cloneNode(true);
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      if (width > 0 && height > 0) {
+        clone.setAttribute("width", String(width));
+        clone.setAttribute("height", String(height));
+        if (!clone.getAttribute("viewBox")) {
+          clone.setAttribute("viewBox", "0 0 " + width + " " + height);
+        }
+      }
+      return new XMLSerializer().serializeToString(clone);
+    }
+    function previewSvgSize(svg) {
+      const rect = svg.getBoundingClientRect();
+      const width = Math.max(1, Math.ceil(rect.width || svg.viewBox?.baseVal?.width || 1));
+      const height = Math.max(1, Math.ceil(rect.height || svg.viewBox?.baseVal?.height || 1));
+      return { width, height };
+    }
+    function loadPreviewImage(sourceUrl) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("image load failed"));
+        image.src = sourceUrl;
+      });
+    }
+    function exportPreviewSvg() {
+      const svg = previewSvgElement();
+      if (!svg) {
+        showWebviewErrorBoundary(previewUiLabels.exportUnavailable, "preview-export-svg");
+        return;
+      }
+      const { width, height } = previewSvgSize(svg);
+      vscode.postMessage({
+        type: "export-preview-svg",
+        source: serializePreviewSvg(svg, width, height)
+      });
+      scheduleUiReviewSnapshot("preview-export-svg");
+    }
+    async function exportPreviewPng() {
+      const svg = previewSvgElement();
+      if (!svg) {
+        showWebviewErrorBoundary(previewUiLabels.exportUnavailable, "preview-export-png");
+        return;
+      }
+      const { width, height } = previewSvgSize(svg);
+      const serialized = serializePreviewSvg(svg, width, height);
+      const svgUrl = URL.createObjectURL(new Blob([serialized], { type: "image/svg+xml;charset=utf-8" }));
+      try {
+        const image = await loadPreviewImage(svgUrl);
+        const scale = Math.min(2, window.devicePixelRatio || 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.ceil(width * scale);
+        canvas.height = Math.ceil(height * scale);
+        const context = canvas.getContext("2d");
+        if (!context) {
+          throw new Error("canvas context unavailable");
+        }
+        const previewBackground = window.getComputedStyle(previewTarget ?? svg).backgroundColor;
+        context.scale(scale, scale);
+        context.fillStyle = previewBackground && previewBackground !== "rgba(0, 0, 0, 0)" ? previewBackground : "#ffffff";
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        const data = canvas.toDataURL("image/png");
+        if (!data || data === "data:,") {
+          throw new Error("canvas toDataURL failed");
+        }
+        vscode.postMessage({
+          type: "export-preview-png",
+          data
+        });
+        scheduleUiReviewSnapshot("preview-export-png");
+      } finally {
+        URL.revokeObjectURL(svgUrl);
+      }
     }
     function isBenignWebviewError(message) {
       return message === "ResizeObserver loop completed with undelivered notifications." ||
@@ -3745,7 +4146,6 @@ function renderScript(
         '<div class="preview-status-actions">' +
         '<button type="button" data-preview-detail-tab="diagnostics">' + escapePreviewHtml(previewUiLabels.openDiagnostics) + '</button>' +
         advancedButton +
-        '<button type="button" data-preview-detail-tab="source">' + escapePreviewHtml(previewUiLabels.openSource) + '</button>' +
         '</div></div>';
     }
     function postPreviewEditState() {
@@ -5178,9 +5578,12 @@ function renderScript(
       return active instanceof HTMLElement ? active.dataset.detailTab || "settings" : "settings";
     }
     function setDetailTab(tabName) {
+      const requestedTab = detailTabs.some((tab) => {
+        return tab instanceof HTMLElement && tab.dataset.detailTab === tabName;
+      }) ? tabName : "settings";
       for (const tab of detailTabs) {
         if (tab instanceof HTMLElement) {
-          const active = tab.dataset.detailTab === tabName;
+          const active = tab.dataset.detailTab === requestedTab;
           tab.classList.toggle("active", active);
           tab.setAttribute("aria-selected", String(active));
           tab.setAttribute("tabindex", active ? "0" : "-1");
@@ -5188,12 +5591,12 @@ function renderScript(
       }
       for (const panel of detailPanels) {
         if (panel instanceof HTMLElement) {
-          const active = panel.dataset.detailPanel === tabName;
+          const active = panel.dataset.detailPanel === requestedTab;
           panel.classList.toggle("active", active);
           panel.hidden = !active;
         }
       }
-      persistViewState(shell?.classList.contains("details-open") ?? false, tabName, activeLayout());
+      persistViewState(shell?.classList.contains("details-open") ?? false, requestedTab, activeLayout());
     }
     function setHostProfile(profileId) {
       const nextProfileId = hostProfileOptions.some((option) => {
@@ -5222,9 +5625,11 @@ function renderScript(
       scheduleUiReviewSnapshot("host-profile-changed");
     }
     setLayout(storedLayout);
-    setPreviewZoom(storedPreviewZoom);
-    setPreviewCollapsed(storedPreviewCollapsed);
-    setPreviewFocused(storedPreviewFocused && !storedPreviewCollapsed);
+    if (activeView !== "format") {
+      setPreviewZoom(storedPreviewZoom);
+      setPreviewCollapsed(storedPreviewCollapsed);
+      setPreviewFocused(storedPreviewFocused && !storedPreviewCollapsed);
+    }
     renderPreviewEditDateAxis();
     setHostProfile(storedHostProfile);
     setDetailTab(initialDetailsTab);
@@ -5339,6 +5744,26 @@ function renderScript(
         setPreviewZoom(button.dataset.previewZoom);
       });
     }
+    document.querySelectorAll('[data-action="export-preview-svg"], [data-action="export-preview-png"]').forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!(button instanceof HTMLElement) || (button instanceof HTMLButtonElement && button.disabled)) {
+          return;
+        }
+        const menu = button.closest("details");
+        if (menu instanceof HTMLDetailsElement) {
+          menu.open = false;
+        }
+        if (button.dataset.action === "export-preview-svg") {
+          exportPreviewSvg();
+          return;
+        }
+        exportPreviewPng().catch((error) => {
+          showWebviewErrorBoundary(error instanceof Error ? error.message : String(error), "preview-export-png");
+        });
+      });
+    });
     for (const tab of detailTabs) {
       tab.addEventListener("click", () => {
         if (tab instanceof HTMLElement && tab.dataset.detailTab) {

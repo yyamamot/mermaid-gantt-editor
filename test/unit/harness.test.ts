@@ -155,6 +155,7 @@ describe("ScenarioSpec contract", () => {
       "nightly-visual-limited-editing",
       "nightly-visual-preview-resize",
       "nightly-visual-preview-pan",
+      "nightly-visual-format-preview",
       "nightly-visual-ja-responsive"
     ]);
     expect(scenarios[0]?.fixture).toBe("fixtures/product/task-grid-basic/source.mmd");

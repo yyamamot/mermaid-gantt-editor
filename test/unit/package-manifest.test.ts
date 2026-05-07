@@ -26,6 +26,15 @@ interface PackageJson {
   contributes?: {
     languages?: Array<{ id?: string; aliases?: string[]; extensions?: string[] }>;
     commands?: Array<{ command?: string; title?: string }>;
+    configuration?: {
+      properties?: Record<string, {
+        type?: string;
+        default?: unknown;
+        enum?: string[];
+        minimum?: number;
+        maximum?: number;
+      }>;
+    };
   };
   scripts?: Record<string, string>;
   files?: string[];
@@ -70,12 +79,33 @@ describe("package manifest", () => {
     const manifest = readPackageJson();
     const commands = (manifest.contributes?.commands ?? []).map((command) => command.command);
 
-    expect(commands).toEqual(["mermaidGantt.showParserInfo", "mermaidGantt.openTaskGrid"]);
+    expect(commands).toEqual(["mermaidGantt.showParserInfo", "mermaidGantt.openTaskGrid", "mermaidGantt.formatSource"]);
     expect(manifest.activationEvents).toEqual([
       ...commands.map((command) => `onCommand:${command}`),
       "onLanguage:markdown",
       "onLanguage:mermaid"
     ]);
+  });
+
+  it("contributes Mermaid Gantt formatter settings", () => {
+    const manifest = readPackageJson();
+    const properties = manifest.contributes?.configuration?.properties ?? {};
+
+    expect(properties["mermaidGantt.format.enabled"]).toMatchObject({ type: "boolean", default: true });
+    expect(properties["mermaidGantt.format.onSave"]).toMatchObject({ type: "boolean", default: false });
+    expect(properties["mermaidGantt.format.indentMode"]).toMatchObject({
+      type: "string",
+      enum: ["official"],
+      default: "official"
+    });
+    expect(properties["mermaidGantt.format.indentSize"]).toMatchObject({
+      type: "number",
+      default: 4,
+      minimum: 0,
+      maximum: 12
+    });
+    expect(properties["mermaidGantt.format.alignTaskColon"]).toMatchObject({ type: "boolean", default: true });
+    expect(properties["mermaidGantt.format.blankLineBetweenSections"]).toMatchObject({ type: "boolean", default: true });
   });
 
   it("ships all required VSIX files and local docs", () => {

@@ -7,6 +7,7 @@
     "fixtures/harness/nightly-visual-limited-editing/scenario.json",
     "fixtures/harness/nightly-visual-preview-resize/scenario.json",
     "fixtures/harness/nightly-visual-preview-pan/scenario.json",
+    "fixtures/harness/nightly-visual-format-preview/scenario.json",
     "fixtures/harness/nightly-visual-ja-responsive/scenario.json"
   ]
 }

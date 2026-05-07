@@ -4,8 +4,19 @@ import { describe, expect, it } from "vitest";
 import {
   applyEditorAction,
   createEditorState,
+  formatPreviewDateLiteral,
   parseGanttLossless
 } from "../../src/core";
+
+function todayLiteral(dateFormat = "YYYY-MM-DD"): string {
+  const now = new Date();
+  const iso = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-");
+  return formatPreviewDateLiteral(iso, dateFormat) ?? iso;
+}
 
 describe("createEditorState", () => {
   it("creates Task Grid rows in source order with diagnostics and advanced source items", () => {
@@ -1229,7 +1240,7 @@ describe("applyEditorAction", () => {
       "gantt",
       "section Planning",
       "Task A : a1, 1d",
-      "New task : task1, 1d",
+      `New task : task1, ${todayLiteral()}, 1d`,
       "section Build",
       "Task B : b1, 2d",
       ""
@@ -1257,7 +1268,7 @@ describe("applyEditorAction", () => {
       "gantt",
       "section Planning",
       "Task A : a1, 1d",
-      "New task : task1, 1d",
+      `New task : task1, ${todayLiteral()}, 1d`,
       "Task B : b1, 2d",
       "Task C : c1, 3d",
       ""
@@ -1285,7 +1296,7 @@ describe("applyEditorAction", () => {
       "gantt",
       "section Planning",
       "Task A : a1, 1d",
-      "New task : task1, 1d",
+      `New task : task1, ${todayLiteral()}, 1d`,
       "Task B : b1, 2d",
       ""
     ].join("\n"));
@@ -1311,7 +1322,7 @@ describe("applyEditorAction", () => {
     expect(result.state.source).toBe([
       "gantt",
       "section Planning",
-      "New task : task1, 1d",
+      `New task : task1, ${todayLiteral()}, 1d`,
       "Task A : a1, 1d",
       "Task B : b1, 2d",
       ""
@@ -1336,7 +1347,7 @@ describe("applyEditorAction", () => {
     expect(result.state.source).toBe([
       "gantt",
       "section Backlog",
-      "New task : task1, 1d",
+      `New task : task1, ${todayLiteral()}, 1d`,
       "section Build",
       "Task A : a1, 1d",
       ""
@@ -1361,7 +1372,7 @@ describe("applyEditorAction", () => {
       "gantt",
       "Task A : task1, 1d",
       "Task B : task2, 2d",
-      "New task : task3, 1d",
+      `New task : task3, ${todayLiteral()}, 1d`,
       ""
     ].join("\n"));
     expect(result.state.grid.rows.map((row) => row.id)).toEqual(["task1", "task2", "task3"]);
@@ -1444,10 +1455,33 @@ describe("applyEditorAction", () => {
     const state = createEditorState(parseGanttLossless("gantt\n"));
     const result = applyEditorAction(state, { type: "add-task" });
 
-    expect(result.state.source).toBe("gantt\nNew task : task1, 1d\n");
+    expect(result.state.source).toBe(`gantt\nNew task : task1, ${todayLiteral()}, 1d\n`);
     expect(result.state.grid.rows[0]).toMatchObject({
       label: "New task",
       id: "task1",
+      duration: "1d"
+    });
+  });
+
+  it("adds a task with today's start date in the document dateFormat", () => {
+    const state = createEditorState(parseGanttLossless([
+      "gantt",
+      "dateFormat DD-MM-YYYY",
+      "Task A : a1, 25-04-2026, 2d",
+      ""
+    ].join("\n")));
+    const result = applyEditorAction(state, { type: "add-task" });
+
+    expect(result.state.source).toBe([
+      "gantt",
+      "dateFormat DD-MM-YYYY",
+      "Task A : a1, 25-04-2026, 2d",
+      `New task : task1, ${todayLiteral("DD-MM-YYYY")}, 1d`,
+      ""
+    ].join("\n"));
+    expect(result.state.grid.rows[1]).toMatchObject({
+      id: "task1",
+      start: todayLiteral("DD-MM-YYYY"),
       duration: "1d"
     });
   });

@@ -1,14 +1,18 @@
+import { basename, extname } from "node:path";
 import * as vscode from "vscode";
 import {
   applyEditorAction,
   createEditorState,
   findMarkdownGanttBlockAtOffset,
   findMarkdownGanttBlocks,
+  formatGanttSource,
   parseGanttLossless,
   projectGanttSemantic,
   replaceMarkdownGanttBlock,
   type EditorAction,
   type EditorState,
+  type GanttFormatDiagnostic,
+  type GanttFormatOptions,
   type MarkdownGanttBlockContext,
   type Range as GanttRange,
   type TaskGridFilter,
@@ -23,7 +27,7 @@ import {
   resolveGanttDocumentLogged,
   type RuntimeLogger
 } from "../logging";
-import { renderTaskGridHtml, type TaskGridWebviewLabels, type TaskGridWebviewOptions } from "./task-grid-webview";
+import { renderTaskGridHtml, type TaskGridFormatPreview, type TaskGridWebviewLabels, type TaskGridWebviewOptions } from "./task-grid-webview";
 
 const SOURCE_CHANGE_RENDER_DEBOUNCE_MS = 200;
 
@@ -90,10 +94,24 @@ export function activate(context: vscode.ExtensionContext): void {
     });
   });
 
+  const formatSource = vscode.commands.registerCommand("mermaidGantt.formatSource", async (target?: FormatSourceTarget) => {
+    await recordUiCommand(runtimeLogger, "mermaidGantt.formatSource");
+    await formatActiveEditorSource(target);
+  });
+
   const subscriptions: vscode.Disposable[] = [
     parserInfo,
     openTaskGrid,
-    vscode.languages.registerCodeLensProvider({ language: "markdown" }, new MarkdownGanttCodeLensProvider())
+    formatSource,
+    vscode.workspace.onWillSaveTextDocument((event) => {
+      const options = formatOptionsForResource(event.document.uri);
+      if (!options.enabled || !formatOnSaveEnabled(event.document.uri)) {
+        return;
+      }
+      event.waitUntil(createFormatTextEdits(event.document, options, undefined, undefined).then((result) => result.edits));
+    }),
+    vscode.languages.registerCodeLensProvider({ language: "markdown" }, new MarkdownGanttCodeLensProvider()),
+    vscode.languages.registerCodeLensProvider({ language: "mermaid" }, new StandaloneGanttCodeLensProvider())
   ];
   if (process.env.MERMAID_GANTT_ENABLE_TEST_COMMANDS === "1") {
     subscriptions.push(
@@ -165,12 +183,18 @@ interface TaskGridMessage {
   detail?: unknown;
   webviewGeneration?: number;
   source?: string;
+  data?: string;
   runtimeType?: string;
   runtimeVersion?: string;
   securityLevel?: string;
 }
 
 interface TaskGridOpenTarget {
+  documentUri?: string;
+  blockContentStartOffset?: number;
+}
+
+interface FormatSourceTarget {
   documentUri?: string;
   blockContentStartOffset?: number;
 }
@@ -193,6 +217,7 @@ interface ActiveTaskGridSession extends TaskGridSession {
   editor: vscode.TextEditor | undefined;
   panel: vscode.WebviewPanel;
   presentationState: TaskGridPresentationState;
+  formatPreview?: TaskGridFormatPreview;
   uiReviewSnapshot?: unknown;
   testWebviewOperationReady?: boolean;
   pendingRenderTimer?: ReturnType<typeof setTimeout>;
@@ -205,6 +230,7 @@ interface TaskGridPresentationState {
   previewEditSelectedNodeId?: string;
   previewEditViewportStartIso?: string;
   previewEditViewportEndIso?: string;
+  formatLayout?: "horizontal" | "vertical";
 }
 
 interface TestEditorSnapshot {
@@ -244,6 +270,11 @@ interface PendingTestWebviewOperation {
   timeout: ReturnType<typeof setTimeout>;
 }
 
+interface FormatTextEditResult {
+  edits: vscode.TextEdit[];
+  diagnostics: GanttFormatDiagnostic[];
+}
+
 function createTestEditorSnapshot(session: ActiveTaskGridSession | undefined): TestEditorSnapshot {
   const editor = vscode.window.activeTextEditor ?? session?.editor;
   const snapshot: TestEditorSnapshot = {};
@@ -260,6 +291,101 @@ function createTestEditorSnapshot(session: ActiveTaskGridSession | undefined): T
     snapshot.taskGridPresentationState = session.presentationState;
   }
   return snapshot;
+}
+
+async function formatActiveEditorSource(target?: FormatSourceTarget): Promise<void> {
+  const targetUri = target?.documentUri ? vscode.Uri.parse(target.documentUri) : undefined;
+  const document = targetUri
+    ? await vscode.workspace.openTextDocument(targetUri)
+    : vscode.window.activeTextEditor?.document;
+  const editor = document ? findVisibleEditor(document) : vscode.window.activeTextEditor;
+  if (!document) {
+    await vscode.window.showWarningMessage(vscode.l10n.t("Open a Mermaid Gantt source file or Markdown Gantt block before formatting."));
+    return;
+  }
+
+  const options = formatOptionsForResource(document.uri);
+  if (!options.enabled) {
+    await vscode.window.showInformationMessage(vscode.l10n.t("Mermaid Gantt formatting is disabled by settings."));
+    return;
+  }
+
+  const result = await createFormatTextEdits(document, options, editor, target);
+  if (result.edits.length === 0) {
+    if (result.diagnostics.length > 0) {
+      await vscode.window.showWarningMessage(vscode.l10n.t("Some Mermaid Gantt source was left unchanged because it could not be formatted safely."));
+      return;
+    }
+    await vscode.window.showInformationMessage(vscode.l10n.t("No Mermaid Gantt formatting changes were needed."));
+    return;
+  }
+
+  const workspaceEdit = new vscode.WorkspaceEdit();
+  for (const edit of result.edits) {
+    workspaceEdit.replace(document.uri, edit.range, edit.newText);
+  }
+  const applied = await vscode.workspace.applyEdit(workspaceEdit);
+  if (!applied) {
+    throw new Error("Failed to format Mermaid Gantt source.");
+  }
+  if (result.diagnostics.length > 0) {
+    await vscode.window.showWarningMessage(vscode.l10n.t("Some Mermaid Gantt source was left unchanged because it could not be formatted safely."));
+  }
+}
+
+async function createFormatTextEdits(
+  document: vscode.TextDocument,
+  options: GanttFormatOptions,
+  editor: vscode.TextEditor | undefined,
+  target?: FormatSourceTarget
+): Promise<FormatTextEditResult> {
+  const text = document.getText();
+  if (document.languageId === "markdown") {
+    const blocks = findMarkdownGanttBlocks(text, document.uri.toString());
+    if (blocks.length === 0) {
+      return { edits: [], diagnostics: [] };
+    }
+    const targetBlock = target?.blockContentStartOffset !== undefined
+      ? blocks.find((block) => block.blockContentRange.start.offset === target.blockContentStartOffset)
+      : undefined;
+    const selectedBlocks = targetBlock
+      ? [targetBlock]
+      : editor
+      ? [await selectMarkdownGanttBlock(editor, text, blocks, undefined)].filter((block): block is MarkdownGanttBlockContext => block !== undefined)
+      : blocks;
+    const edits: vscode.TextEdit[] = [];
+    const diagnostics: GanttFormatDiagnostic[] = [];
+    for (const block of selectedBlocks) {
+      const result = formatGanttSource(block.gantt.source, options);
+      diagnostics.push(...result.diagnostics);
+      if (result.changed) {
+        edits.push(vscode.TextEdit.replace(toVsCodeRange(document, block.blockContentRange), result.source));
+      }
+    }
+    return { edits, diagnostics };
+  }
+
+  const result = formatGanttSource(text, options);
+  return {
+    edits: result.changed ? [vscode.TextEdit.replace(fullDocumentRange(document), result.source)] : [],
+    diagnostics: result.diagnostics
+  };
+}
+
+function formatOptionsForResource(resource: vscode.Uri): GanttFormatOptions {
+  const configuration = vscode.workspace.getConfiguration("mermaidGantt.format", resource);
+  const indentMode = configuration.get<string>("indentMode", "official");
+  return {
+    enabled: configuration.get<boolean>("enabled", true),
+    indentMode: indentMode === "official" ? "official" : "official",
+    indentSize: configuration.get<number>("indentSize", 4),
+    alignTaskColon: configuration.get<boolean>("alignTaskColon", true),
+    blankLineBetweenSections: configuration.get<boolean>("blankLineBetweenSections", true)
+  };
+}
+
+function formatOnSaveEnabled(resource: vscode.Uri): boolean {
+  return vscode.workspace.getConfiguration("mermaidGantt.format", resource).get<boolean>("onSave", false);
 }
 
 async function createTaskGridSession(
@@ -366,18 +492,45 @@ function summarizeMarkdownGanttBlock(block: MarkdownGanttBlockContext): string {
 class MarkdownGanttCodeLensProvider implements vscode.CodeLensProvider {
   provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
     const blocks = findMarkdownGanttBlocks(document.getText(), document.uri.toString());
-    return blocks.map((block) => {
+    return blocks.flatMap((block) => {
       const openingFenceLine = Math.max(0, block.blockContentRange.start.line - 2);
       const range = new vscode.Range(openingFenceLine, 0, openingFenceLine, 0);
-      return new vscode.CodeLens(range, {
+      const target = {
+        documentUri: document.uri.toString(),
+        blockContentStartOffset: block.blockContentRange.start.offset
+      };
+      return [new vscode.CodeLens(range, {
         title: vscode.l10n.t("Open Gantt Editor"),
         command: "mermaidGantt.openTaskGrid",
-        arguments: [{
-          documentUri: document.uri.toString(),
-          blockContentStartOffset: block.blockContentRange.start.offset
-        } satisfies TaskGridOpenTarget]
-      });
+        arguments: [target satisfies TaskGridOpenTarget]
+      }), new vscode.CodeLens(range, {
+        title: vscode.l10n.t("Format Gantt Source"),
+        command: "mermaidGantt.formatSource",
+        arguments: [target satisfies FormatSourceTarget]
+      })];
     });
+  }
+}
+
+class StandaloneGanttCodeLensProvider implements vscode.CodeLensProvider {
+  provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
+    const gantt = parseGanttLossless(document.getText());
+    const keyword = gantt.items.find((item) => item.kind === "DiagramKeyword" && item.targetDiagram);
+    if (!keyword) {
+      return [];
+    }
+    const keywordLine = document.positionAt(keyword.range.start.offset).line;
+    const range = new vscode.Range(keywordLine, 0, keywordLine, 0);
+    const target = { documentUri: document.uri.toString() };
+    return [new vscode.CodeLens(range, {
+      title: vscode.l10n.t("Open Gantt Editor"),
+      command: "mermaidGantt.openTaskGrid",
+      arguments: [target satisfies TaskGridOpenTarget]
+    }), new vscode.CodeLens(range, {
+      title: vscode.l10n.t("Format Gantt Source"),
+      command: "mermaidGantt.formatSource",
+      arguments: [target satisfies FormatSourceTarget]
+    })];
   }
 }
 
@@ -427,12 +580,38 @@ async function applyTaskGridMessageToSession(
     };
     return;
   }
+  if (message.type === "export-preview-svg" || message.type === "export-preview-png") {
+    await exportPreviewAsset(message, session);
+    return;
+  }
   if (isSourceHistoryMessage(message)) {
+    session.formatPreview = undefined;
     await applySourceHistoryMessageToSession(message.type, session, runtimeLogger);
     if (session.editor && isVisibleTextEditor(session.editor)) {
       revealEditorSelection(session.editor, session.state, currentMarkdownBlock(session.editor, session.markdownBlockIndex));
     }
     session.testWebviewOperationReady = false;
+    renderSessionPanelNow(context, session);
+    return;
+  }
+  if (message.type === "format-source") {
+    await formatTaskGridSessionSource(session, context, runtimeLogger);
+    return;
+  }
+  if (message.type === "update-format-layout") {
+    session.presentationState = {
+      ...session.presentationState,
+      formatLayout: message.value === "vertical" ? "vertical" : "horizontal"
+    };
+    renderSessionPanelNow(context, session);
+    return;
+  }
+  if (message.type === "apply-format-source") {
+    await applyTaskGridFormatPreview(session, context, runtimeLogger);
+    return;
+  }
+  if (message.type === "cancel-format-source") {
+    session.formatPreview = undefined;
     renderSessionPanelNow(context, session);
     return;
   }
@@ -450,6 +629,7 @@ async function applyTaskGridMessageToSession(
     return;
   }
   if (result.sourceChanged && session.editor) {
+    session.formatPreview = undefined;
     const nextSession = await applySourceToEditor(session.editor, result.state, session.markdownBlockIndex, runtimeLogger);
     session.state = nextSession.state;
     session.markdownBlockIndex = nextSession.markdownBlockIndex;
@@ -469,6 +649,100 @@ async function applyTaskGridMessageToSession(
   } else {
     renderSessionPanelNow(context, session);
   }
+}
+
+async function formatTaskGridSessionSource(
+  session: ActiveTaskGridSession,
+  context: vscode.ExtensionContext,
+  _runtimeLogger: RuntimeLogger | undefined
+): Promise<void> {
+  const editor = session.editor;
+  if (!editor) {
+    await vscode.window.showWarningMessage(vscode.l10n.t("Task Grid source editor was not found."));
+    return;
+  }
+  const options = formatOptionsForResource(editor.document.uri);
+  if (!options.enabled) {
+    await vscode.window.showInformationMessage(vscode.l10n.t("Mermaid Gantt formatting is disabled by settings."));
+    return;
+  }
+  const block = currentMarkdownBlock(editor, session.markdownBlockIndex);
+  const before = block?.gantt.source ?? session.state.source;
+  const result = formatGanttSource(before, options);
+  if (!result.changed) {
+    if (result.diagnostics.length > 0) {
+      await vscode.window.showWarningMessage(vscode.l10n.t("Some Mermaid Gantt source was left unchanged because it could not be formatted safely."));
+      return;
+    }
+    await vscode.window.showInformationMessage(vscode.l10n.t("No Mermaid Gantt formatting changes were needed."));
+    return;
+  }
+  session.formatPreview = {
+    before,
+    after: result.source,
+    changedLineCount: countChangedLines(before, result.source),
+    diagnostics: result.diagnostics.map((diagnostic) => diagnostic.message)
+  };
+  renderSessionPanelNow(context, session);
+}
+
+async function applyTaskGridFormatPreview(
+  session: ActiveTaskGridSession,
+  context: vscode.ExtensionContext,
+  runtimeLogger: RuntimeLogger | undefined
+): Promise<void> {
+  const editor = session.editor;
+  const preview = session.formatPreview;
+  if (!editor || !preview) {
+    await vscode.window.showWarningMessage(vscode.l10n.t("Task Grid source editor was not found."));
+    return;
+  }
+  const nextState = createEditorState(parseGanttLossless(preview.after), session.state.selected);
+  const nextSession = await applySourceToEditor(editor, nextState, session.markdownBlockIndex, runtimeLogger);
+  if (nextSession) {
+    session.state = nextSession.state;
+    session.markdownBlockIndex = nextSession.markdownBlockIndex;
+  }
+  session.formatPreview = undefined;
+  session.testWebviewOperationReady = false;
+  renderSessionPanelNow(context, session);
+}
+
+async function exportPreviewAsset(message: TaskGridMessage, session: ActiveTaskGridSession): Promise<void> {
+  const format = message.type === "export-preview-png" ? "png" : "svg";
+  const content = format === "svg" ? message.source : message.data;
+  if (typeof content !== "string" || content.length === 0) {
+    await vscode.window.showWarningMessage(vscode.l10n.t("Preview export data was not found. Render Preview, then try again."));
+    return;
+  }
+  const defaultUri = suggestedPreviewExportUri(session, format);
+  const uri = await vscode.window.showSaveDialog({
+    defaultUri,
+    filters: format === "svg"
+      ? { [vscode.l10n.t("SVG")]: ["svg"] }
+      : { [vscode.l10n.t("PNG")]: ["png"] }
+  });
+  if (!uri) {
+    return;
+  }
+  const bytes = format === "svg"
+    ? new TextEncoder().encode(content)
+    : Uint8Array.from(Buffer.from(content.replace(/^data:image\/png;base64,/u, ""), "base64"));
+  try {
+    await vscode.workspace.fs.writeFile(uri, bytes);
+  } catch (error) {
+    await vscode.window.showErrorMessage(error instanceof Error ? error.message : String(error));
+  }
+}
+
+function suggestedPreviewExportUri(session: ActiveTaskGridSession, extension: "svg" | "png"): vscode.Uri | undefined {
+  const document = session.editor?.document;
+  if (!document || document.uri.scheme === "untitled") {
+    return undefined;
+  }
+  const currentName = basename(document.uri.fsPath);
+  const baseName = currentName.slice(0, currentName.length - extname(currentName).length) || "gantt";
+  return vscode.Uri.joinPath(document.uri, "..", `${baseName}.${extension}`);
 }
 
 function updatePreviewEditPresentationState(session: ActiveTaskGridSession, message: TaskGridMessage): void {
@@ -743,7 +1017,7 @@ function scheduleSourceChangedPanelRender(context: vscode.ExtensionContext, sess
 }
 
 function renderSessionPanel(context: vscode.ExtensionContext, session: ActiveTaskGridSession, webviewGeneration: number): void {
-  renderPanel(context, session.panel, session.state, session.presentationState, webviewGeneration);
+  renderPanel(context, session.panel, session.state, session.presentationState, webviewGeneration, session.formatPreview);
 }
 
 function isCurrentTestWebviewGeneration(session: ActiveTaskGridSession, message: TaskGridMessage): boolean {
@@ -755,7 +1029,8 @@ function renderPanel(
   panel: vscode.WebviewPanel,
   state: EditorState,
   presentationState: TaskGridPresentationState = { previewEditMode: false },
-  webviewGeneration?: number
+  webviewGeneration?: number,
+  formatPreview?: TaskGridFormatPreview
 ): void {
   panel.webview.html = renderTaskGridHtml(state, createTaskGridLabels(), {
     nonce: createNonce(),
@@ -766,6 +1041,8 @@ function renderPanel(
     initialPreviewEditSelectedNodeId: presentationState.previewEditSelectedNodeId,
     initialPreviewEditViewportStartIso: presentationState.previewEditViewportStartIso,
     initialPreviewEditViewportEndIso: presentationState.previewEditViewportEndIso,
+    initialFormatLayout: presentationState.formatLayout,
+    formatPreview,
     mermaidRuntimeVersion: bundledMermaidVersion(context),
     hostBridgeScript: vscodeTaskGridHostBridgeScript(),
     mermaidModuleUri: panel.webview.asWebviewUri(
@@ -824,8 +1101,7 @@ function isTestDetailTab(value: string | undefined): value is NonNullable<TaskGr
   return value === "settings" ||
     value === "inspector" ||
     value === "diagnostics" ||
-    value === "advanced" ||
-    value === "source";
+    value === "advanced";
 }
 
 function isTestPreviewZoom(value: string | undefined): value is NonNullable<TaskGridWebviewOptions["initialPreviewZoom"]> {
@@ -1279,17 +1555,44 @@ function isVisibleTextEditor(editor: vscode.TextEditor): boolean {
   return vscode.window.visibleTextEditors.some((visibleEditor) => visibleEditor === editor);
 }
 
+function findVisibleEditor(document: vscode.TextDocument): vscode.TextEditor | undefined {
+  return vscode.window.visibleTextEditors.find((editor) => editor.document.uri.toString() === document.uri.toString());
+}
+
+function countChangedLines(before: string, after: string): number {
+  const beforeLines = before.split(/\r\n|\n/);
+  const afterLines = after.split(/\r\n|\n/);
+  const max = Math.max(beforeLines.length, afterLines.length);
+  let changed = 0;
+  for (let index = 0; index < max; index += 1) {
+    if (beforeLines[index] !== afterLines[index]) {
+      changed += 1;
+    }
+  }
+  return changed;
+}
+
 async function replaceDocumentText(document: vscode.TextDocument, text: string): Promise<void> {
-  const fullRange = new vscode.Range(
-    document.positionAt(0),
-    document.positionAt(document.getText().length)
-  );
   const edit = new vscode.WorkspaceEdit();
-  edit.replace(document.uri, fullRange, text);
+  edit.replace(document.uri, fullDocumentRange(document), text);
   const applied = await vscode.workspace.applyEdit(edit);
   if (!applied) {
     throw new Error("Failed to update Mermaid Gantt source document.");
   }
+}
+
+function fullDocumentRange(document: vscode.TextDocument): vscode.Range {
+  return new vscode.Range(
+    document.positionAt(0),
+    document.positionAt(document.getText().length)
+  );
+}
+
+function toVsCodeRange(document: vscode.TextDocument, range: GanttRange): vscode.Range {
+  return new vscode.Range(
+    document.positionAt(range.start.offset),
+    document.positionAt(range.end.offset)
+  );
 }
 
 function createNonce(): string {
@@ -1315,6 +1618,7 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     layout: vscode.l10n.t("Layout"),
     horizontal: vscode.l10n.t("Horizontal"),
     vertical: vscode.l10n.t("Vertical"),
+    format: vscode.l10n.t("Format"),
     previewControls: vscode.l10n.t("Preview controls"),
     previewFit: vscode.l10n.t("Fit"),
     previewFill: vscode.l10n.t("Fill"),
@@ -1324,6 +1628,10 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     previewZoomOut: vscode.l10n.t("Zoom out"),
     previewResetZoom: vscode.l10n.t("Reset zoom"),
     previewZoomIn: vscode.l10n.t("Zoom in"),
+    previewExport: vscode.l10n.t("Export"),
+    previewExportSvg: vscode.l10n.t("SVG"),
+    previewExportPng: vscode.l10n.t("PNG"),
+    previewExportUnavailable: vscode.l10n.t("Preview SVG could not be found. Render Preview, then try again."),
     previewEdit: vscode.l10n.t("Edit"),
     previewEditDone: vscode.l10n.t("Done"),
     previewEditGuidance: vscode.l10n.t("Drag a supported task to reschedule."),
@@ -1342,7 +1650,6 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     previewExitFocus: vscode.l10n.t("Show Task Grid"),
     diagnostics: vscode.l10n.t("Diagnostics"),
     documentSettings: vscode.l10n.t("Document Settings"),
-    previewSource: vscode.l10n.t("Preview Source"),
     previewDiagram: vscode.l10n.t("Preview"),
     advancedSourceItems: vscode.l10n.t("Advanced Source Items"),
     inspector: vscode.l10n.t("Inspector"),
@@ -1385,6 +1692,13 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     actions: vscode.l10n.t("Actions"),
     undo: vscode.l10n.t("Undo"),
     redo: vscode.l10n.t("Redo"),
+    formatSource: vscode.l10n.t("Format source"),
+    formatPreview: vscode.l10n.t("Format preview"),
+    formatPreviewSummary: vscode.l10n.t("{0} lines will change."),
+    applyFormatting: vscode.l10n.t("Apply formatting"),
+    cancelFormatting: vscode.l10n.t("Cancel"),
+    beforeFormatting: vscode.l10n.t("Before"),
+    afterFormatting: vscode.l10n.t("After"),
     addSection: vscode.l10n.t("Add section"),
     addSectionBelow: vscode.l10n.t("Add section below"),
     addTask: vscode.l10n.t("Add task"),
@@ -1401,24 +1715,21 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     deleteTaskConfirm: vscode.l10n.t("Delete this task?"),
     deleteSection: vscode.l10n.t("Delete section"),
     deleteSectionConfirm: vscode.l10n.t("Delete this section?"),
-    rawSourceEditor: vscode.l10n.t("Raw Source Editor"),
     sourceOrder: vscode.l10n.t("Source Order"),
     noTaskSelected: vscode.l10n.t("No task selected."),
     noDiagnostics: vscode.l10n.t("No diagnostics."),
     noAdvancedSourceItems: vscode.l10n.t("No advanced source items."),
     limitedEditing: vscode.l10n.t("Preview source is unavailable. Structured editing is limited; review diagnostics and Advanced Source Items before writing back."),
-    fallbackEditing: vscode.l10n.t("Unsupported in structured mode. Structured editing is disabled; use Diagnostics or Raw Source Editor so the lossless source is preserved."),
+    fallbackEditing: vscode.l10n.t("Unsupported in structured mode. Structured editing is disabled; review Diagnostics while the lossless source is preserved in the text editor."),
     previewBlocked: vscode.l10n.t("Preview source is blocked by projection issues. Review diagnostics or advanced source items."),
     previewRenderFailed: vscode.l10n.t("Preview render failed: "),
     previewBlockedTitle: vscode.l10n.t("Preview blocked"),
     previewRenderFailedTitle: vscode.l10n.t("Preview render failed"),
     previewOpenDiagnostics: vscode.l10n.t("Open Diagnostics"),
     previewOpenAdvanced: vscode.l10n.t("Open Advanced Source Items"),
-    previewOpenSource: vscode.l10n.t("Open Source"),
     webviewErrorTitle: vscode.l10n.t("Task Grid error"),
-    webviewErrorMessage: vscode.l10n.t("The source is preserved. Review Diagnostics or Source, then reopen Task Grid if needed."),
+    webviewErrorMessage: vscode.l10n.t("The source is preserved. Review Diagnostics, then reopen Task Grid if needed."),
     webviewErrorOpenDiagnostics: vscode.l10n.t("Open Diagnostics"),
-    webviewErrorOpenSource: vscode.l10n.t("Open Source"),
     webviewErrorDismiss: vscode.l10n.t("Dismiss"),
     taskLabelEditor: vscode.l10n.t("Task Label"),
     taskLabelEditorHelp: vscode.l10n.t("Use this multiline editor for long labels. The original source is updated only when the field changes."),
@@ -1457,13 +1768,12 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     fallbackImpact: vscode.l10n.t("Structured editing and preview are blocked until this source can be projected safely."),
     limitedEditingImpact: vscode.l10n.t("Preview source is blocked; supported grid fields still use source-preserving write-back."),
     diagnosticImpact: vscode.l10n.t("Review the highlighted source range before applying an action."),
-    advancedSourceGuidance: vscode.l10n.t("This retained source item is not currently editable in the grid. It stays in the source and can be reviewed or edited from Raw Source Editor."),
+    advancedSourceGuidance: vscode.l10n.t("This retained source item is not currently editable in the grid. It stays in the source and can be edited in the text editor."),
     advancedSourceType: vscode.l10n.t("Type"),
     advancedSourceRange: vscode.l10n.t("Source range"),
     advancedSourceEditability: vscode.l10n.t("Editability"),
     advancedSourceRawOnly: vscode.l10n.t("Raw source only"),
     advancedSourceReason: vscode.l10n.t("Reason"),
-    advancedSourceOpenSource: vscode.l10n.t("Open Source"),
     advancedSourceOpenDiagnostics: vscode.l10n.t("Open Diagnostics"),
     diagnosticMessages: {
       "diagnostics.dateFormatMismatch": vscode.l10n.t("Task date does not match dateFormat."),

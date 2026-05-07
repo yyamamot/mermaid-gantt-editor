@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.3 (2026-05-07)
+
+### Added
+
+- Add GUI format review actions with syntax-highlighted Mermaid Gantt source.
+- Add a Task Grid format button for reviewing and applying Mermaid Gantt source formatting.
+- Add Preview export actions for saving Mermaid Gantt charts as SVG or PNG.
+- Add today's start date to new Task Grid tasks to avoid missing-start diagnostics.
+- Remove Details source panels and expand Format Review source comparison width.
+
 ## 0.0.2 (2026-04-30)
 
 ### Fixed

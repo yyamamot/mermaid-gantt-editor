@@ -32,7 +32,7 @@ The static site is useful for evaluating the editor experience. Use the VS Code 
 - Preview the Mermaid chart while editing
 - Review diagnostics such as duplicate IDs and missing dependencies
 - Apply safe quick fixes when the source range is known
-- Use raw source fallback when structured editing is not safe
+- Review fallback diagnostics when structured editing is not safe
 - Write changes back only to the selected Mermaid block
 
 ## Installation
@@ -64,7 +64,7 @@ title Product Plan
 dateFormat YYYY-MM-DD
 section Planning
 API design : done, a1, 2026-05-01, 3d
-設計レビュー : review, after a1, 2d
+Design review : review, after a1, 2d
 ```
 ````
 
@@ -99,13 +99,13 @@ Problems are shown in Diagnostics. When a fix is safe, you can apply it through 
   <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-diagnostics.png" alt="Diagnostics and quick fixes" width="960">
 </p>
 
-### 5. Use raw source fallback when needed
+### 5. Review fallback diagnostics when needed
 
-If the source contains unsupported syntax or risky metadata, the extension protects the Mermaid text by switching to raw source fallback instead of forcing structured edits.
+If the source contains unsupported syntax or risky metadata, the extension protects the Mermaid text by blocking unsafe structured edits and surfacing diagnostics.
 
 <!-- screenshot: readme-fallback -->
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-fallback.png" alt="Raw source fallback mode" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-fallback.png" alt="Fallback diagnostics for unsafe source" width="960">
 </p>
 
 ## Features
@@ -115,11 +115,11 @@ If the source contains unsupported syntax or risky metadata, the extension prote
 | Task Grid | Edits Gantt tasks in a table | Supports labels, IDs, dates, durations, dependencies, and tags |
 | Markdown block editing | Opens fenced `mermaid` Gantt blocks directly | Writes back only to the selected block in multi-block Markdown files |
 | Mermaid preview | Shows the chart while editing | Uses the bundled Mermaid runtime |
-| Details | Edits the selected task and document settings | Switch between Inspector, Diagnostics, Source, and more |
+| Details | Edits the selected task and document settings | Switch between Inspector, Diagnostics, retained source items, and more |
 | Diagnostics | Finds common hand-written source problems | Duplicate IDs, undefined dependencies, date format mismatch, and more |
 | Quick fix | Applies safe repairs | Only when the source range is explicit |
 | Source-safe write-back | Keeps edits scoped | Preserves comments, directives, raw text, and unknown syntax |
-| Raw source fallback | Protects source that is unsafe to structure-edit | Lets you keep editing without losing text |
+| Fallback diagnostics | Protects source that is unsafe to structure-edit | Keeps Mermaid text in the source editor and avoids unsafe write-back |
 | Host compatibility | Shows GitHub / GitLab / Obsidian guidance | Helps compare bundled Mermaid with host Mermaid behavior |
 
 ## Main Workflows

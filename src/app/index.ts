@@ -1,5 +1,6 @@
 export {
   renderTaskGridHtml,
+  type TaskGridFormatPreview,
   type TaskGridWebviewLabels,
   type TaskGridWebviewOptions
 } from "./task-grid-webview";

@@ -1,4 +1,12 @@
 {
   "command.mermaidGantt.showParserInfo.title": "Mermaid Gantt Editor: Show Parser Info",
-  "command.mermaidGantt.openTaskGrid.title": "Mermaid Gantt Editor: Open Gantt Editor"
+  "command.mermaidGantt.openTaskGrid.title": "Mermaid Gantt Editor: Open Gantt Editor",
+  "command.mermaidGantt.formatSource.title": "Mermaid Gantt Editor: Format Mermaid Gantt Source",
+  "configuration.mermaidGantt.format.title": "Mermaid Gantt Editor Formatting",
+  "configuration.mermaidGantt.format.enabled.description": "Enable Mermaid Gantt source formatting commands and save hooks.",
+  "configuration.mermaidGantt.format.onSave.description": "Format Mermaid Gantt source when saving. Disabled by default to avoid unexpected source diffs.",
+  "configuration.mermaidGantt.format.indentMode.description": "Indent mode for Mermaid Gantt formatting. The official mode follows Mermaid's sample style.",
+  "configuration.mermaidGantt.format.indentSize.description": "Number of spaces used for official Mermaid Gantt indentation.",
+  "configuration.mermaidGantt.format.alignTaskColon.description": "Align task colons when formatting Mermaid Gantt task rows.",
+  "configuration.mermaidGantt.format.blankLineBetweenSections.description": "Insert a blank line before each section when formatting Mermaid Gantt source."
 }

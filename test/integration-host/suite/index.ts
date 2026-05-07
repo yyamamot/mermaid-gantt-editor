@@ -5,12 +5,22 @@ import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { promisify } from "node:util";
 import * as vscode from "vscode";
-import { findMarkdownGanttBlocks } from "../../../src/core";
+import { findMarkdownGanttBlocks, formatPreviewDateLiteral } from "../../../src/core";
 import type { EditorState } from "../../../src/core";
 import type { AssertionSpec, ScenarioSpec } from "../../../src/harness";
 import { parseRuntimeLogEvent } from "../../../src/logging";
 
 const execFileAsync = promisify(execFile);
+
+function todayLiteral(dateFormat = "YYYY-MM-DD"): string {
+  const now = new Date();
+  const iso = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-");
+  return formatPreviewDateLiteral(iso, dateFormat) ?? iso;
+}
 
 export async function run(): Promise<void> {
   await activateDevelopmentExtension();
@@ -23,6 +33,10 @@ export async function run(): Promise<void> {
 
   await testCommandsAreRegistered();
   await testCommandsRunAgainstStandaloneGanttDocument();
+  await testFormatCommandUpdatesStandaloneGanttDocument();
+  await testFormatCommandUpdatesSelectedMarkdownGanttBlock();
+  await testFormatOnSaveDefaultsOffAndCanBeEnabled();
+  await testTaskGridMessageFormatsStandaloneGanttDocument();
   await testEditorSnapshotCommandObservesActiveDocument();
   await testTaskGridAcceptsDayFirstDateFormat();
   await testTaskGridMessageUpdatesStandaloneGanttDocument();
@@ -67,6 +81,7 @@ export async function run(): Promise<void> {
   await testTaskGridMessageUndoRedoMarkdownGanttBlock();
   await testTaskGridMessageUpdatesSelectedMarkdownGanttBlock();
   await testMarkdownGanttCodeLensTargetsGanttBlocks();
+  await testStandaloneGanttCodeLensProvidesGuiActions();
   await testTaskGridCommandRunsAgainstTargetedMarkdownGanttBlock();
   await testRuntimeLogsFallbackEntry();
   await testNightlyVisualSmokeScenarioFromManifest();
@@ -84,6 +99,7 @@ async function testCommandsAreRegistered(): Promise<void> {
 
   assert.ok(commands.includes("mermaidGantt.showParserInfo"));
   assert.ok(commands.includes("mermaidGantt.openTaskGrid"));
+  assert.ok(commands.includes("mermaidGantt.formatSource"));
   assert.ok(commands.includes("mermaidGantt.test.getTaskGridState"));
   assert.ok(commands.includes("mermaidGantt.test.getEditorSnapshot"));
   assert.ok(commands.includes("mermaidGantt.test.getUiReviewSnapshot"));
@@ -102,6 +118,135 @@ async function testCommandsRunAgainstStandaloneGanttDocument(): Promise<void> {
   await disposeTaskGridAndCloseEditors();
 }
 
+async function testFormatCommandUpdatesStandaloneGanttDocument(): Promise<void> {
+  const editor = await openDocument([
+    "gantt",
+    "title Product Plan",
+    "section Planning",
+    "API design:done, a1, 2026-05-01, 3d",
+    "Review:review, after a1, 2d",
+    ""
+  ].join("\n"), "mermaid");
+
+  await vscode.commands.executeCommand("mermaidGantt.formatSource");
+
+  assert.equal(editor.document.getText(), [
+    "gantt",
+    "    title Product Plan",
+    "",
+    "    section Planning",
+    "    API design :done, a1, 2026-05-01, 3d",
+    "    Review     :review, after a1, 2d",
+    ""
+  ].join("\n"));
+  await disposeTaskGridAndCloseEditors();
+}
+
+async function testFormatCommandUpdatesSelectedMarkdownGanttBlock(): Promise<void> {
+  const source = [
+    "# Plan",
+    "",
+    "```mermaid",
+    "gantt",
+    "First:a1, 1d",
+    "```",
+    "",
+    "```mermaid",
+    "gantt",
+    "Second:b1, 2d",
+    "```",
+    ""
+  ].join("\n");
+  const editor = await openDocument(source, "markdown");
+  const secondOffset = source.indexOf("Second");
+  editor.selection = new vscode.Selection(editor.document.positionAt(secondOffset), editor.document.positionAt(secondOffset));
+
+  await vscode.commands.executeCommand("mermaidGantt.formatSource");
+
+  assert.equal(editor.document.getText(), [
+    "# Plan",
+    "",
+    "```mermaid",
+    "gantt",
+    "First:a1, 1d",
+    "```",
+    "",
+    "```mermaid",
+    "gantt",
+    "    Second :b1, 2d",
+    "```",
+    ""
+  ].join("\n"));
+  await disposeTaskGridAndCloseEditors();
+}
+
+async function testFormatOnSaveDefaultsOffAndCanBeEnabled(): Promise<void> {
+  const setting = "mermaidGantt.format.onSave";
+  const configuration = vscode.workspace.getConfiguration();
+  const original = configuration.inspect<boolean>(setting)?.globalValue;
+  const artifactDir = join(process.env.MERMAID_GANTT_EXTENSION_ROOT ?? process.cwd(), ".tmp", "host-format");
+  await mkdir(artifactDir, { recursive: true });
+
+  try {
+    await configuration.update(setting, false, vscode.ConfigurationTarget.Global);
+    const defaultOffPath = join(artifactDir, "default-off.mmd");
+    await writeFile(defaultOffPath, "gantt\nTask A:a1, 1d\n", "utf8");
+    const defaultOffEditor = await openDocumentFromFile(defaultOffPath);
+    await makeDocumentDirty(defaultOffEditor);
+    await defaultOffEditor.document.save();
+    assert.equal(defaultOffEditor.document.getText(), "gantt\nTask A :a1, 1d\n");
+
+    await configuration.update(setting, true, vscode.ConfigurationTarget.Global);
+    const enabledPath = join(artifactDir, "enabled.mmd");
+    await writeFile(enabledPath, "gantt\nTask A:a1, 1d\n", "utf8");
+    const enabledEditor = await openDocumentFromFile(enabledPath);
+    await makeDocumentDirty(enabledEditor);
+    await enabledEditor.document.save();
+    assert.equal(enabledEditor.document.getText(), "gantt\n    Task A :a1, 1d\n");
+  } finally {
+    await configuration.update(setting, original, vscode.ConfigurationTarget.Global);
+    await disposeTaskGridAndCloseEditors();
+  }
+}
+
+async function testTaskGridMessageFormatsStandaloneGanttDocument(): Promise<void> {
+  const editor = await openDocument([
+    "gantt",
+    "section Planning",
+    "API design:a1, 2026-05-01, 3d",
+    "Review:after a1, 2d",
+    ""
+  ].join("\n"), "mermaid");
+
+  await vscode.commands.executeCommand("mermaidGantt.openTaskGrid");
+  await vscode.commands.executeCommand("mermaidGantt.test.applyTaskGridMessage", {
+    type: "format-source"
+  });
+  assert.equal(editor.document.getText(), [
+    "gantt",
+    "section Planning",
+    "API design:a1, 2026-05-01, 3d",
+    "Review:after a1, 2d",
+    ""
+  ].join("\n"), "format preview should not apply source changes immediately");
+
+  await vscode.commands.executeCommand("mermaidGantt.test.applyTaskGridMessage", {
+    type: "apply-format-source"
+  });
+
+  assert.equal(editor.document.getText(), [
+    "gantt",
+    "",
+    "    section Planning",
+    "    API design :a1, 2026-05-01, 3d",
+    "    Review     :after a1, 2d",
+    ""
+  ].join("\n"));
+  const state = await taskGridState();
+  assert.equal(state.source, editor.document.getText());
+  await disposeTaskGridAndCloseEditors();
+}
+
 async function testEditorSnapshotCommandObservesActiveDocument(): Promise<void> {
   const source = "gantt\nTask A : a1, 1d\n";
   const editor = await openDocument(source, "mermaid");
@@ -114,7 +259,7 @@ async function testEditorSnapshotCommandObservesActiveDocument(): Promise<void> 
   await vscode.commands.executeCommand("mermaidGantt.openTaskGrid");
   const snapshot = await editorSnapshot();
 
-  assert.equal(snapshot.languageId, "plaintext");
+  assert.equal(snapshot.languageId, "mermaid");
   assert.equal(snapshot.text, source);
   assert.equal(snapshot.selectionStartOffset, taskOffset);
   assert.equal(snapshot.selectionEndOffset, taskOffset + "Task A".length);
@@ -881,7 +1026,7 @@ async function testTaskGridMessageAddsTaskToEmptySection(): Promise<void> {
   assert.equal(editor.document.getText(), [
     "gantt",
     "section Backlog",
-    "New task : task1, 1d",
+    `New task : task1, ${todayLiteral()}, 1d`,
     "section Build",
     "Task A : a1, 1d",
     ""
@@ -912,7 +1057,7 @@ async function testTaskGridMessageAddsTask(): Promise<void> {
     "gantt",
     "section Planning",
     "Task A : a1, 1d",
-    "New task : task1, 1d",
+    `New task : task1, ${todayLiteral()}, 1d`,
     ""
   ].join("\n"));
   await disposeTaskGridAndCloseEditors();
@@ -939,7 +1084,7 @@ async function testTaskGridMessageAddsTaskBelowSourceTask(): Promise<void> {
   assert.equal(editor.document.getText(), [
     "gantt",
     "Task A : a1, 1d",
-    "New task : task1, 1d",
+    `New task : task1, ${todayLiteral()}, 1d`,
     "Task B : b1, 2d",
     ""
   ].join("\n"));
@@ -968,7 +1113,7 @@ async function testTaskGridMessageAddsTaskAboveSourceTask(): Promise<void> {
   assert.equal(editor.document.getText(), [
     "gantt",
     "Task A : a1, 1d",
-    "New task : task1, 1d",
+    `New task : task1, ${todayLiteral()}, 1d`,
     "Task B : b1, 2d",
     ""
   ].join("\n"));
@@ -1115,7 +1260,7 @@ async function testTaskGridMessageUndoRedoStandaloneSource(): Promise<void> {
   const expectedAfterAdd = [
     "gantt",
     "Task A : a1, 1d",
-    "New task : task1, 1d",
+    `New task : task1, ${todayLiteral()}, 1d`,
     ""
   ].join("\n");
   const editor = await openDocument(source, "mermaid");
@@ -1885,7 +2030,7 @@ async function testTaskGridMessageUndoRedoMarkdownGanttBlock(): Promise<void> {
     "```mermaid",
     "gantt",
     "Task A : a1, 1d",
-    "New task : task1, 1d",
+    `New task : task1, ${todayLiteral()}, 1d`,
     "```",
     ""
   ].join("\n");
@@ -2037,13 +2182,64 @@ async function testMarkdownGanttCodeLensTargetsGanttBlocks(): Promise<void> {
     editor.document.uri
   );
 
-  assert.equal(lenses.length, 2, "expected one CodeLens per Markdown Gantt block");
-  assert.ok(lenses.every((lens) => lens.command?.command === "mermaidGantt.openTaskGrid"));
-  assert.ok(lenses.every((lens) => lens.command?.title.includes("Gantt Editor")));
+  assert.equal(lenses.length, 4, "expected open and format CodeLens entries per Markdown Gantt block");
+  assert.deepEqual(
+    lenses.map((lens) => lens.command?.command),
+    [
+      "mermaidGantt.openTaskGrid",
+      "mermaidGantt.formatSource",
+      "mermaidGantt.openTaskGrid",
+      "mermaidGantt.formatSource"
+    ]
+  );
+  assert.ok(lenses.some((lens) => lens.command?.title.includes("Gantt Editor")));
+  assert.ok(lenses.some((lens) => lens.command?.title.includes("Format")));
   assert.deepEqual(
     lenses.map((lens) => lens.range.start.line),
-    [7, 12]
+    [7, 7, 12, 12]
   );
+
+  const formatLens = lenses.find((lens) => lens.command?.command === "mermaidGantt.formatSource" && lens.range.start.line === 12);
+  assert.ok(formatLens?.command);
+  await vscode.commands.executeCommand(formatLens.command.command, ...(formatLens.command.arguments ?? []));
+  assert.equal(editor.document.getText(), [
+    "# Plan",
+    "",
+    "```mermaid",
+    "flowchart TD",
+    "A --> B",
+    "```",
+    "",
+    "```mermaid",
+    "gantt",
+    "First : a1, 1d",
+    "```",
+    "",
+    "```mermaid",
+    "gantt",
+    "    Second :b1, 1d",
+    "```",
+    ""
+  ].join("\n"));
+  await disposeTaskGridAndCloseEditors();
+}
+
+async function testStandaloneGanttCodeLensProvidesGuiActions(): Promise<void> {
+  const editor = await openDocument("gantt\nTask A:a1, 1d\n", "mermaid");
+  const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>(
+    "vscode.executeCodeLensProvider",
+    editor.document.uri
+  );
+
+  assert.deepEqual(
+    lenses.map((lens) => lens.command?.command),
+    ["mermaidGantt.openTaskGrid", "mermaidGantt.formatSource"]
+  );
+  assert.deepEqual(lenses.map((lens) => lens.range.start.line), [0, 0]);
+  const formatLens = lenses.find((lens) => lens.command?.command === "mermaidGantt.formatSource");
+  assert.ok(formatLens?.command);
+  await vscode.commands.executeCommand(formatLens.command.command, ...(formatLens.command.arguments ?? []));
+  assert.equal(editor.document.getText(), "gantt\n    Task A :a1, 1d\n");
   await disposeTaskGridAndCloseEditors();
 }
 
@@ -2151,6 +2347,16 @@ async function openDocument(content: string, language: string): Promise<vscode.T
 async function openDocumentFromFile(path: string): Promise<vscode.TextEditor> {
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
   return vscode.window.showTextDocument(document);
+}
+
+async function makeDocumentDirty(editor: vscode.TextEditor): Promise<void> {
+  const colonOffset = editor.document.getText().indexOf(":");
+  assert.ok(colonOffset >= 0, "expected a task metadata colon");
+  const colon = editor.document.positionAt(colonOffset);
+  const changed = await editor.edit((builder) => {
+    builder.insert(colon, " ");
+  });
+  assert.ok(changed, "failed to mark document dirty");
 }
 
 async function captureNightlyScreenshotIfRequested(): Promise<void> {

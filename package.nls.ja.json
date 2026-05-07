@@ -1,4 +1,12 @@
 {
   "command.mermaidGantt.showParserInfo.title": "Mermaid Gantt Editor: パーサー情報を表示",
-  "command.mermaidGantt.openTaskGrid.title": "Mermaid Gantt Editor: Gantt Editor を開く"
+  "command.mermaidGantt.openTaskGrid.title": "Mermaid Gantt Editor: Gantt Editor を開く",
+  "command.mermaidGantt.formatSource.title": "Mermaid Gantt Editor: Mermaid Gantt Source を整形",
+  "configuration.mermaidGantt.format.title": "Mermaid Gantt Editor の整形",
+  "configuration.mermaidGantt.format.enabled.description": "Mermaid Gantt source の整形コマンドと保存時 hook を有効にします。",
+  "configuration.mermaidGantt.format.onSave.description": "保存時に Mermaid Gantt source を整形します。予期しない差分を避けるため既定では無効です。",
+  "configuration.mermaidGantt.format.indentMode.description": "Mermaid Gantt 整形の indent mode です。official mode は Mermaid のサンプルに近いスタイルです。",
+  "configuration.mermaidGantt.format.indentSize.description": "official Mermaid Gantt indentation に使うスペース数です。",
+  "configuration.mermaidGantt.format.alignTaskColon.description": "Mermaid Gantt task row の colon 位置を揃えます。",
+  "configuration.mermaidGantt.format.blankLineBetweenSections.description": "Mermaid Gantt source の整形時に各 section の前へ空行を入れます。"
 }

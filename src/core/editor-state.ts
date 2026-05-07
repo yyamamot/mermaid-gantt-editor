@@ -1,5 +1,6 @@
 import { applyLosslessTextPatch, emitNormalizedGantt } from "./emitter";
 import { parseGanttLossless } from "./parser";
+import { formatPreviewDateLiteral } from "./preview-schedule-editing";
 import { projectGanttSemantic } from "./projection";
 import { createDiagnosticSummary, resolveGanttDocument } from "./resolver";
 import { RangeMapper } from "./range";
@@ -45,6 +46,18 @@ const EDITABLE_TASK_TAGS = new Set(["active", "done", "crit", "milestone", "vert
 const TASK_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const DURATION_PATTERN = /^\d+(?:\.\d+)?(?:millisecond|second|minute|hour|day|week|month|year|ms|s|m|h|d|w|M|y)s?$/i;
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function localTodayIsoDate(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function defaultNewTaskStartLiteral(dateFormat: string | undefined): string {
+  const todayIso = localTodayIsoDate();
+  return formatPreviewDateLiteral(todayIso, dateFormat) ?? todayIso;
+}
 
 export function createEditorState(
   document: GanttDocument,
@@ -995,10 +1008,11 @@ function addTask(
   });
   const insertRange = new RangeMapper(document.source).rangeFromOffsets(insertOffset, insertOffset);
   const taskId = nextGeneratedTaskId(document);
+  const startLiteral = defaultNewTaskStartLiteral(semantic.settings.dateFormat);
   const prefix = insertOffset > 0 && document.source[insertOffset - 1] !== "\n" ? "\n" : "";
   const patch = {
     range: insertRange,
-    text: `${prefix}New task : ${taskId}, 1d\n`
+    text: `${prefix}New task : ${taskId}, ${startLiteral}, 1d\n`
   };
   const diagnostic = validatePatchRanges(document, [patch.range]);
   if (diagnostic) {

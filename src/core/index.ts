@@ -6,5 +6,6 @@ export * from "./resolver";
 export * from "./emitter";
 export * from "./editor-state";
 export * from "./preview-schedule-editing";
+export * from "./formatter";
 export * from "./markdown";
 export * from "./summary";

@@ -17,7 +17,7 @@ import { renderPreviewScheduleOverlay } from "../../src/app";
 import { renderTestWebviewOperationBlock } from "../../src/app";
 
 describe("renderTaskGridHtml", () => {
-  it("renders Task Grid rows, diagnostics, preview source, and advanced source items", () => {
+  it("renders Task Grid rows, diagnostics, and advanced source items", () => {
     const state = createEditorState(parseGanttLossless([
       "%%{init: { \"theme\": \"forest\" }}%%",
       "gantt",
@@ -169,16 +169,16 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain("Raw source only");
     expect(html).toContain("Source range");
     expect(html).toContain('class="advanced-source-actions"');
-    expect(html).toContain(">Open Source</button>");
+    expect(html).not.toContain(">Open Source</button>");
     expect(html).toContain("Preview source is blocked");
     expect(html).toContain("Preview blocked");
     expect(html).toContain('data-review-id="preview-status-card"');
     expect(html).toContain('data-preview-status="blocked"');
     expect(html).toContain('data-preview-detail-tab="diagnostics"');
     expect(html).toContain('data-preview-detail-tab="advanced"');
-    expect(html).toContain('data-preview-detail-tab="source"');
-    expect(html).toContain("Raw Source Editor");
-    expect(html).toContain('data-action="replace-source"');
+    expect(html).not.toContain('data-preview-detail-tab="source"');
+    expect(html).not.toContain("Raw Source Editor");
+    expect(html).not.toContain('data-action="replace-source"');
     expect(html).toContain('id="mermaid-preview"');
     expect(html).toContain('id="webview-error-boundary"');
     expect(html).toContain('role="alert"');
@@ -196,6 +196,12 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain('data-preview-zoom="out"');
     expect(html).toContain('data-preview-zoom="reset"');
     expect(html).toContain('data-preview-zoom="in"');
+    expect(html).toContain('data-review-id="preview-export-menu"');
+    expect(html).toContain('data-action="export-preview-svg"');
+    expect(html).toContain('data-action="export-preview-png"');
+    expect(html).toContain("Export");
+    expect(html).toContain("SVG");
+    expect(html).toContain("PNG");
     expect(html).toContain('id="preview-edit-toggle"');
     expect(html).toContain('data-review-id="preview-edit-toggle"');
     expect(html).toContain('id="preview-edit-overlay"');
@@ -223,8 +229,26 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain("calculateFitPreviewZoom");
     expect(html).toContain("calculateFillPreviewZoom");
     expect(html).toContain("ResizeObserver");
-    expect(html).toContain('data-detail-panel="source"');
+    expect(html).not.toContain('data-detail-panel="source"');
     expect(html).not.toContain("Task <A>");
+  });
+
+  it("does not render source editing controls in Details when preview source is available", () => {
+    const source = [
+      "gantt",
+      "Task A : a1, 2026-05-01, 1d",
+      ""
+    ].join("\n");
+    const state = createEditorState(parseGanttLossless(source));
+    const html = renderTaskGridHtml(state, labels(), {
+      initialDetailsOpen: true,
+      initialDetailTab: "settings"
+    });
+
+    expect(state.previewSource).toBeDefined();
+    expect(html).not.toContain("Raw Source Editor");
+    expect(html).not.toContain('<textarea class="raw-source" data-action="replace-source">');
+    expect(html).not.toContain("Preview Source");
   });
 
   it("uses compact proportional grid columns when tags are present", () => {
@@ -282,6 +306,10 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain('type: "preview-render-started"');
     expect(html).toContain('type: "preview-render-succeeded"');
     expect(html).toContain('type: "preview-render-failed"');
+    expect(html).toContain('type: "export-preview-svg"');
+    expect(html).toContain('type: "export-preview-png"');
+    expect(html).toContain("serializePreviewSvg");
+    expect(html).toContain("toDataURL");
     expect(html).toContain("previewCollapsed");
     expect(html).toContain("previewFocused");
     expect(html).toContain("previewSelectedTaskVisible");
@@ -407,6 +435,8 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain('data-action="update-setting"');
     expect(html).toContain('data-action="undo"');
     expect(html).toContain('data-action="redo"');
+    expect(html).toContain('data-action="format-source"');
+    expect(html).toContain("Format");
     expect(html).toContain('aria-label="Undo"');
     expect(html).toContain('title="Redo"');
     expect(html).toContain('data-action="add-section"');
@@ -545,9 +575,50 @@ describe("renderTaskGridHtml", () => {
     const header = html.slice(html.indexOf("<header>"), html.indexOf("</header>"));
     expect(header).not.toContain("data-action");
     const previewHeader = html.slice(html.indexOf('<div class="preview-header">'), html.indexOf('<div class="preview-box"'));
-    expect(previewHeader).not.toContain("data-action");
-    expect(html).toContain('data-detail-panel="source"');
+    expect(previewHeader).toContain('data-action="export-preview-svg"');
+    expect(previewHeader).toContain('data-action="export-preview-png"');
+    expect(html).not.toContain('data-detail-panel="source"');
     expect(html).toContain("section Planning");
+  });
+
+  it("renders a source formatting preview with apply and cancel actions", () => {
+    const state = createEditorState(parseGanttLossless("gantt\nTask A:a1, 1d\n"));
+    const html = renderTaskGridHtml(state, labels(), {
+      allowEditing: true,
+      formatPreview: {
+        before: "gantt\nTask A:a1, 1d\n",
+        after: "gantt\n    Task A :a1, 1d\n",
+        changedLineCount: 1,
+        diagnostics: ["A task row was left unchanged because its metadata could not be formatted safely."]
+      }
+    });
+
+    expect(html).toContain('data-review-id="format-review"');
+    expect(html).toContain('data-active-view="format"');
+    expect(html).toContain("format-reviewing");
+    expect(html).toContain("Format preview");
+    expect(html).toContain("1 lines will change.");
+    expect(html).toContain('class="format-source-code"');
+    expect(html).toContain('<span class="tok-keyword">gantt</span>');
+    expect(html).toContain('<span class="tok-label">Task A</span><span class="tok-punct">:</span><span class="tok-id">a1</span>, <span class="tok-duration">1d</span>');
+    expect(html).toContain('<span class="tok-label">    Task A </span><span class="tok-punct">:</span><span class="tok-id">a1</span>, <span class="tok-duration">1d</span>');
+    expect(html).toContain('data-action="apply-format-source"');
+    expect(html).toContain('data-action="cancel-format-source"');
+    expect(html).toContain('data-action="update-format-layout"');
+    expect(html).toContain('data-value="horizontal"');
+    expect(html).toContain('data-value="vertical"');
+    expect(html).toContain(".shell.format-reviewing");
+    expect(html).toContain(".shell.format-reviewing.layout-vertical .workspace");
+    expect(html).toContain("grid-template-rows: auto minmax(0, 1fr)");
+    expect(html).toContain("max-width: 100%");
+    expect(html).toContain("repeat(2, minmax(0, 1fr))");
+    expect(html).toContain(".format-diff pre");
+    expect(html).toContain("max-width: 100%");
+    expect(html).toContain("A task row was left unchanged");
+    expect(html).not.toContain('data-action="format-source"');
+    expect(html).not.toContain('id="details-toggle"');
+    expect(html).not.toContain('data-review-id="task-grid"');
+    expect(html).not.toContain('data-review-id="preview-pane"');
   });
 
   it("allows VS Code adapter bridge injection without coupling app rendering to acquireVsCodeApi", () => {
@@ -757,10 +828,9 @@ describe("renderTaskGridHtml", () => {
 
     expect(state.mode).toBe("fallback");
     expect(html).toContain("Unsupported in structured mode");
-    expect(html).toContain('data-initial-detail-tab="source"');
-    expect(html).toContain("Raw Source Editor");
-    expect(html).toContain('data-action="replace-source"');
-    expect(html).toContain("Task A : a1, 3dX");
+    expect(html).toContain('data-initial-detail-tab="diagnostics"');
+    expect(html).not.toContain("Raw Source Editor");
+    expect(html).not.toContain('data-action="replace-source"');
     expect(html).toContain("Structured editing and preview are blocked");
     expect(html).not.toContain('data-action="update-task-label"');
     expect(html).not.toContain('data-action="update-task-id"');
@@ -818,7 +888,7 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain("This retained source item is not currently editable");
     expect(html).toContain("%%{init:");
     expect(html).toContain('click a1 href &quot;https://example.com&quot;');
-    expect(html).toContain('data-action="replace-source"');
+    expect(html).not.toContain('data-action="replace-source"');
   });
 
   it("renders host compatibility diagnostics as guidance plus a safe quick-fix", () => {
@@ -1148,6 +1218,10 @@ describe("renderTaskGridHtml", () => {
     expect(script).toContain('actionTarget.dataset.action === "open-date-picker"');
     expect(script).toContain("openNativeDatePicker(actionTarget)");
     expect(script).toContain('type: "update-task-tags"');
+    expect(script).toContain('type: "format-source"');
+    expect(script).toContain('type: "update-format-layout"');
+    expect(script).toContain('type: "apply-format-source"');
+    expect(script).toContain('type: "cancel-format-source"');
     expect(script).toContain('type: "select-task"');
   });
 });
@@ -1166,6 +1240,7 @@ function labels(): TaskGridWebviewLabels {
     layout: "Layout",
     horizontal: "Horizontal",
     vertical: "Vertical",
+    format: "Format",
     previewControls: "Preview controls",
     previewFit: "Fit",
     previewFill: "Fill",
@@ -1175,6 +1250,10 @@ function labels(): TaskGridWebviewLabels {
     previewZoomOut: "Zoom out",
     previewResetZoom: "Reset zoom",
     previewZoomIn: "Zoom in",
+    previewExport: "Export",
+    previewExportSvg: "SVG",
+    previewExportPng: "PNG",
+    previewExportUnavailable: "Preview SVG could not be found. Render Preview, then try again.",
     previewEdit: "Edit",
     previewEditDone: "Done",
     previewEditGuidance: "Drag a supported task to reschedule.",
@@ -1218,7 +1297,6 @@ function labels(): TaskGridWebviewLabels {
     todayMarker: "Today Marker",
     topAxis: "Top Axis",
     inclusiveEndDates: "Inclusive End Dates",
-    previewSource: "Preview Source",
     previewDiagram: "Preview",
     advancedSourceItems: "Advanced Source Items",
     section: "Section",
@@ -1236,6 +1314,13 @@ function labels(): TaskGridWebviewLabels {
     actions: "Actions",
     undo: "Undo",
     redo: "Redo",
+    formatSource: "Format source",
+    formatPreview: "Format preview",
+    formatPreviewSummary: "{0} lines will change.",
+    applyFormatting: "Apply formatting",
+    cancelFormatting: "Cancel",
+    beforeFormatting: "Before",
+    afterFormatting: "After",
     addSection: "Add section",
     addSectionBelow: "Add section below",
     addTask: "Add task",
@@ -1252,24 +1337,21 @@ function labels(): TaskGridWebviewLabels {
     deleteTaskConfirm: "Delete this task?",
     deleteSection: "Delete section",
     deleteSectionConfirm: "Delete this section?",
-    rawSourceEditor: "Raw Source Editor",
     sourceOrder: "Source Order",
     noTaskSelected: "No task selected.",
     noDiagnostics: "No diagnostics.",
     noAdvancedSourceItems: "No advanced source items.",
     limitedEditing: "Preview source is unavailable. Structured editing is limited; review diagnostics and Advanced Source Items before writing back.",
-    fallbackEditing: "Unsupported in structured mode. Structured editing is disabled; use Diagnostics or Raw Source Editor so the lossless source is preserved.",
+    fallbackEditing: "Unsupported in structured mode. Structured editing is disabled; review Diagnostics while the lossless source is preserved in the text editor.",
     previewBlocked: "Preview source is blocked by projection issues. Review diagnostics or advanced source items.",
     previewRenderFailed: "Preview render failed: ",
     previewBlockedTitle: "Preview blocked",
     previewRenderFailedTitle: "Preview render failed",
     previewOpenDiagnostics: "Open Diagnostics",
     previewOpenAdvanced: "Open Advanced Source Items",
-    previewOpenSource: "Open Source",
     webviewErrorTitle: "Task Grid error",
-    webviewErrorMessage: "The source is preserved. Review Diagnostics or Source, then reopen Task Grid if needed.",
+    webviewErrorMessage: "The source is preserved. Review Diagnostics, then reopen Task Grid if needed.",
     webviewErrorOpenDiagnostics: "Open Diagnostics",
-    webviewErrorOpenSource: "Open Source",
     webviewErrorDismiss: "Dismiss",
     taskLabelEditor: "Task Label",
     taskLabelEditorHelp: "Use this multiline editor for long labels. The original source is updated only when the field changes.",
@@ -1308,13 +1390,12 @@ function labels(): TaskGridWebviewLabels {
     fallbackImpact: "Structured editing and preview are blocked until this source can be projected safely.",
     limitedEditingImpact: "Preview source is blocked; supported grid fields still use source-preserving write-back.",
     diagnosticImpact: "Review the highlighted source range before applying an action.",
-    advancedSourceGuidance: "This retained source item is not currently editable in the grid. It stays in the source and can be reviewed or edited from Raw Source Editor.",
+    advancedSourceGuidance: "This retained source item is not currently editable in the grid. It stays in the source and can be edited in the text editor.",
     advancedSourceType: "Type",
     advancedSourceRange: "Source range",
     advancedSourceEditability: "Editability",
     advancedSourceRawOnly: "Raw source only",
     advancedSourceReason: "Reason",
-    advancedSourceOpenSource: "Open Source",
     advancedSourceOpenDiagnostics: "Open Diagnostics",
     diagnosticMessages: {
       "diagnostics.dateFormatMismatch": "Task date does not match dateFormat.",

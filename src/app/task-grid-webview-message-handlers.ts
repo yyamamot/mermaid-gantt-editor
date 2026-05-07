@@ -248,6 +248,31 @@ export function renderEditingMessageHandlers(enabled: boolean): string {
         });
         return;
       }
+      if (actionTarget instanceof HTMLElement && actionTarget.dataset.action === "format-source") {
+        vscode.postMessage({
+          type: "format-source"
+        });
+        return;
+      }
+      if (actionTarget instanceof HTMLElement && actionTarget.dataset.action === "update-format-layout") {
+        vscode.postMessage({
+          type: "update-format-layout",
+          value: actionTarget.dataset.value
+        });
+        return;
+      }
+      if (actionTarget instanceof HTMLElement && actionTarget.dataset.action === "apply-format-source") {
+        vscode.postMessage({
+          type: "apply-format-source"
+        });
+        return;
+      }
+      if (actionTarget instanceof HTMLElement && actionTarget.dataset.action === "cancel-format-source") {
+        vscode.postMessage({
+          type: "cancel-format-source"
+        });
+        return;
+      }
       if (actionTarget instanceof HTMLElement && actionTarget.dataset.action === "add-section") {
         vscode.postMessage({
           type: "add-section",
@@ -408,13 +433,6 @@ export function renderEditingMessageHandlers(enabled: boolean): string {
           type: targetAction,
           nodeId,
           value: formatted
-        });
-        return;
-      }
-      if (action === "replace-source") {
-        vscode.postMessage({
-          type: action,
-          value: target.value
         });
         return;
       }

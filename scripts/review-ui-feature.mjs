@@ -33,6 +33,14 @@ const scenarioAliases = new Map([
       MERMAID_GANTT_TEST_PREVIEW_ZOOM: "1.5"
     }
   }],
+  ["format-preview", {
+    path: "fixtures/harness/nightly-visual-format-preview/scenario.json",
+    env: { MERMAID_GANTT_TEST_PREVIEW_COLLAPSED: "1" }
+  }],
+  ["nightly-visual-format-preview", {
+    path: "fixtures/harness/nightly-visual-format-preview/scenario.json",
+    env: { MERMAID_GANTT_TEST_PREVIEW_COLLAPSED: "1" }
+  }],
   ["ja-responsive", {
     path: "fixtures/harness/nightly-visual-ja-responsive/scenario.json",
     env: {
