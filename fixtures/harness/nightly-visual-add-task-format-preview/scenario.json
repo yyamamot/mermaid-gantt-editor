@@ -1,0 +1,47 @@
+{
+  "id": "nightly-visual-add-task-format-preview",
+  "fixture": "fixtures/product/task-grid-basic/source.mmd",
+  "expectedMode": "structured",
+  "steps": [
+    {
+      "id": "open-fixture",
+      "type": "open-fixture"
+    },
+    {
+      "id": "open-task-grid",
+      "type": "run-command",
+      "command": "mermaidGantt.openTaskGrid"
+    },
+    {
+      "id": "add-task",
+      "type": "run-command",
+      "command": "mermaidGantt.test.applyTaskGridMessage",
+      "args": [
+        {
+          "type": "add-task"
+        }
+      ]
+    },
+    {
+      "id": "open-format-preview",
+      "type": "run-command",
+      "command": "mermaidGantt.test.applyTaskGridMessage",
+      "args": [
+        {
+          "type": "format-source"
+        }
+      ]
+    },
+    {
+      "id": "get-editor-snapshot",
+      "type": "run-command",
+      "command": "mermaidGantt.test.getEditorSnapshot"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "mode",
+      "expected": "structured"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 import {
   createPreviewScheduleEditModel,
   type EditorState,
+  type GanttFormatChangeKind,
+  type GanttFormatChangeSummary,
   type PreviewScheduleEditModel,
   type TaskGridField,
   type TaskGridRow
@@ -26,13 +28,21 @@ const TASK_TAG_OPTIONS = ["active", "done", "crit", "milestone", "vert"];
 const DEFAULT_BUNDLED_MERMAID_VERSION = "11.14.0";
 
 type HostCompatibilityProfileId = "mermaid-latest" | "github" | "gitlab" | "obsidian";
+type HostCompatibilityWarningPriority = "high" | "medium" | "low";
 
 interface HostCompatibilityProfileSummary {
   id: HostCompatibilityProfileId;
   label: string;
   runtimeLabel: string;
   status: "ok" | "warning";
-  warnings: string[];
+  warnings: HostCompatibilityProfileWarning[];
+}
+
+interface HostCompatibilityProfileWarning {
+  reason: string;
+  impact: string;
+  nextStep: string;
+  priority: HostCompatibilityWarningPriority;
 }
 
 export interface TaskGridWebviewLabels {
@@ -125,6 +135,14 @@ export interface TaskGridWebviewLabels {
   formatSource: string;
   formatPreview: string;
   formatPreviewSummary: string;
+  formatSummaryLines: string;
+  formatSummaryTasks: string;
+  formatSummarySections: string;
+  formatSummaryIndent: string;
+  formatSummaryTaskColonAlignment: string;
+  formatSummaryBlankLines: string;
+  formatSummaryOther: string;
+  formatSummaryPreservedUnsafeTasks: string;
   applyFormatting: string;
   cancelFormatting: string;
   beforeFormatting: string;
@@ -175,23 +193,54 @@ export interface TaskGridWebviewLabels {
   hostCompatibilityProfileObsidian: string;
   hostCompatibilityWarningCount: string;
   hostCompatibilityRetainedCount: string;
+  hostCompatibilityProfileSummary: string;
+  hostCompatibilityStatus: string;
+  hostCompatibilityStatusOk: string;
+  hostCompatibilityStatusVerify: string;
   hostCompatibilityProfileWarnings: string;
   hostCompatibilityNoWarnings: string;
   hostCompatibilityRiskySyntax: string;
   hostCompatibilitySelectedProfile: string;
+  hostCompatibilityPriority: string;
+  hostCompatibilityPriorityHigh: string;
+  hostCompatibilityPriorityMedium: string;
+  hostCompatibilityPriorityLow: string;
+  hostCompatibilityProfileImpact: string;
+  hostCompatibilityProfileNextStep: string;
   hostCompatibilityRuntimeGitHub: string;
   hostCompatibilityRuntimeGitLab: string;
   hostCompatibilityRuntimeObsidian: string;
   hostCompatibilityWarningClickCall: string;
+  hostCompatibilityImpactClickCall: string;
+  hostCompatibilityNextStepClickCall: string;
   hostCompatibilityWarningConfig: string;
+  hostCompatibilityImpactConfig: string;
+  hostCompatibilityNextStepConfig: string;
   hostCompatibilityWarningGitHub: string;
+  hostCompatibilityImpactGitHub: string;
+  hostCompatibilityNextStepGitHub: string;
   hostCompatibilityWarningGitLab: string;
+  hostCompatibilityImpactGitLab: string;
+  hostCompatibilityNextStepGitLab: string;
   hostCompatibilityWarningObsidian: string;
+  hostCompatibilityImpactObsidian: string;
+  hostCompatibilityNextStepObsidian: string;
+  hostCompatibilityWarningSourcePreserved: string;
+  hostCompatibilityImpactSourcePreserved: string;
+  hostCompatibilityNextStepSourcePreserved: string;
   diagnosticsStage: string;
   diagnosticsLocation: string;
   diagnosticsReason: string;
   diagnosticsImpact: string;
+  diagnosticsNextStep: string;
   diagnosticsAction: string;
+  diagnosticsRelatedSource: string;
+  dependencyIssues: string;
+  dependencyUndefinedReferences: string;
+  dependencySelfReferences: string;
+  dependencyCycles: string;
+  dependencyAffectedReferences: string;
+  dependencyQuickFixHint: string;
   removeBlockingReference: string;
   replaceBlockingReference: string;
   useExistingTaskId: string;
@@ -206,6 +255,8 @@ export interface TaskGridWebviewLabels {
   advancedSourceReason: string;
   advancedSourceOpenDiagnostics: string;
   diagnosticMessages?: Record<string, string>;
+  diagnosticImpacts?: Record<string, string>;
+  diagnosticGuidance?: Record<string, string>;
   diagnosticActionLabels?: Record<string, string>;
 }
 
@@ -239,6 +290,7 @@ export interface TaskGridFormatPreview {
   before: string;
   after: string;
   changedLineCount: number;
+  summary: GanttFormatChangeSummary;
   diagnostics: string[];
 }
 
@@ -267,6 +319,7 @@ export function renderTaskGridHtml(
   const sectionOptions = uniqueSectionOptions(state);
   const mermaidRuntimeVersion = options.mermaidRuntimeVersion ?? DEFAULT_BUNDLED_MERMAID_VERSION;
   const hostCompatibility = summarizeHostCompatibility(state, labels, mermaidRuntimeVersion);
+  const preferHostCompatibilityWarningProfile = hostCompatibility.warningCount > 0 || hostCompatibility.retainedSourceItemCount > 0;
   const previewScheduleEditModel = createPreviewScheduleEditModel(rows, state.semantic?.settings.dateFormat, {
     domainStartIso: options.initialPreviewEditViewportStartIso,
     domainEndIso: options.initialPreviewEditViewportEndIso
@@ -382,7 +435,7 @@ export function renderTaskGridHtml(
     activeMenu: initialOpenRowActionMenuNodeId ? "row-action-menu" : "none",
     dependencyPickerCount: dependencyOptions.length,
     hostCompatibility: {
-      selectedProfile: "mermaid-latest",
+      selectedProfile: initialHostCompatibilityProfile(hostCompatibility.profiles, preferHostCompatibilityWarningProfile).id,
       warningCount: hostCompatibility.warningCount,
       retainedSourceItemCount: hostCompatibility.retainedSourceItemCount,
       profiles: hostCompatibility.profiles.map((profile) => ({
@@ -445,6 +498,17 @@ export function renderTaskGridHtml(
       --button-secondary-fg: var(--vscode-button-secondaryForeground, var(--text));
       --list-hover-bg: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.05));
       --table-header-bg: var(--vscode-editorGroupHeader-tabsBackground, var(--panel-2));
+      --syntax-keyword: var(--vscode-symbolIcon-keywordForeground, var(--info));
+      --syntax-title: var(--vscode-symbolIcon-stringForeground, color-mix(in srgb, var(--input-fg) 72%, var(--warn)));
+      --syntax-section: var(--vscode-symbolIcon-classForeground, color-mix(in srgb, var(--input-fg) 70%, var(--accent)));
+      --syntax-label: var(--input-fg);
+      --syntax-punct: color-mix(in srgb, var(--input-fg) 72%, var(--muted));
+      --syntax-date: var(--vscode-charts-green, color-mix(in srgb, var(--input-fg) 70%, #2f8f46));
+      --syntax-duration: var(--vscode-charts-purple, color-mix(in srgb, var(--input-fg) 70%, #7c3aed));
+      --syntax-status: var(--vscode-charts-orange, color-mix(in srgb, var(--input-fg) 70%, #b45309));
+      --syntax-id: var(--vscode-symbolIcon-variableForeground, color-mix(in srgb, var(--input-fg) 74%, var(--info)));
+      --syntax-link: var(--vscode-textLink-foreground, var(--syntax-id));
+      --syntax-comment: var(--vscode-editorLineNumber-foreground, var(--muted));
       --preview-canvas-bg: #ffffff;
       --preview-canvas-fg: #1b2b34;
     }
@@ -1092,6 +1156,53 @@ export function renderTaskGridHtml(
       min-width: 0;
       overflow-wrap: anywhere;
     }
+    .dependency-summary {
+      margin: 10px 12px;
+      padding: 10px;
+      border: 1px solid color-mix(in srgb, var(--warn) 48%, var(--border));
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--warn) 7%, var(--panel-2));
+    }
+    .dependency-summary h3 {
+      margin: 0 0 6px;
+      font-size: 13px;
+    }
+    .dependency-summary .summary-counts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .dependency-summary .summary-counts span {
+      padding: 5px 7px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--panel-2);
+      overflow-wrap: anywhere;
+    }
+    .dependency-summary ul,
+    .related-source-list {
+      display: grid;
+      gap: 5px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .dependency-summary li,
+    .related-source-list li {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .related-source-list code {
+      display: inline-block;
+      max-width: 100%;
+    }
+    .diagnostic-helper {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
     .action-label {
       margin-top: 8px;
       margin-bottom: 4px;
@@ -1156,6 +1267,33 @@ export function renderTaskGridHtml(
     .format-preview-warning {
       color: var(--warn);
     }
+    .format-summary-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .format-summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 24px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      background: color-mix(in srgb, var(--input-bg) 82%, transparent);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .format-summary-pill strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .format-summary-pill.warning {
+      color: var(--warn);
+      border-color: color-mix(in srgb, var(--warn) 55%, var(--border));
+    }
     .format-diff {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1191,28 +1329,54 @@ export function renderTaskGridHtml(
       overflow: auto;
       overflow-wrap: normal;
     }
+    .format-source-line {
+      display: block;
+      min-height: 1.35em;
+      padding: 0 4px 0 0;
+    }
+    .format-source-line.changed {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+    }
+    .format-source-line.removed {
+      background: color-mix(in srgb, #f87171 18%, transparent);
+    }
+    .format-source-line.added {
+      background: color-mix(in srgb, #34d399 16%, transparent);
+    }
+    .format-diff-gutter {
+      display: inline-block;
+      width: 2ch;
+      color: var(--muted);
+      user-select: none;
+    }
+    .format-source-line.removed .format-diff-gutter {
+      color: #fca5a5;
+    }
+    .format-source-line.added .format-diff-gutter {
+      color: #86efac;
+    }
     .format-source-code span {
       font: inherit;
       font-style: normal;
       font-weight: inherit;
       letter-spacing: inherit;
     }
-    .tok-keyword { color: #7cc7ff; }
-    .tok-title { color: #e2c678; }
-    .tok-section { color: #8ee2d1; }
-    .tok-label { color: #e6eef2; }
-    .tok-punct { color: #91a4b7; }
-    .tok-date { color: #9adf89; }
-    .tok-duration { color: #c6a8ff; }
-    .tok-status { color: #ffb86b; }
-    .tok-id { color: #9cdcfe; }
+    .tok-keyword { color: var(--syntax-keyword); }
+    .tok-title { color: var(--syntax-title); }
+    .tok-section { color: var(--syntax-section); }
+    .tok-label { color: var(--syntax-label); }
+    .tok-punct { color: var(--syntax-punct); }
+    .tok-date { color: var(--syntax-date); }
+    .tok-duration { color: var(--syntax-duration); }
+    .tok-status { color: var(--syntax-status); }
+    .tok-id { color: var(--syntax-id); }
     .tok-link {
-      color: #68d8ef;
+      color: var(--syntax-link);
       text-decoration: underline;
       text-decoration-thickness: 1px;
       text-underline-offset: 2px;
     }
-    .tok-comment { color: #708395; }
+    .tok-comment { color: var(--syntax-comment); }
     .preview-box {
       position: relative;
       min-height: 0;
@@ -1871,6 +2035,29 @@ export function renderTaskGridHtml(
       flex-wrap: wrap;
       gap: 5px;
     }
+    .compatibility-profile-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+      gap: 6px;
+    }
+    .compatibility-profile-summary-card {
+      display: grid;
+      gap: 4px;
+      padding: 7px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: color-mix(in srgb, var(--panel-2) 66%, transparent);
+      font-size: 11px;
+    }
+    .compatibility-profile-summary-card strong {
+      color: var(--text);
+    }
+    .compatibility-status {
+      color: var(--muted);
+    }
+    .compatibility-status.warning {
+      color: var(--warn);
+    }
     .compatibility-profile {
       appearance: none;
       padding: 2px 7px;
@@ -1890,14 +2077,46 @@ export function renderTaskGridHtml(
     .compatibility-profile-card[hidden] {
       display: none;
     }
-    .compatibility-profile-card ul {
+    .compatibility-warning-list {
       display: grid;
       gap: 4px;
       margin: 0;
-      padding-left: 16px;
+      padding: 0;
+      list-style: none;
       color: var(--muted);
       font-size: 11px;
       line-height: 1.35;
+    }
+    .compatibility-warning {
+      display: grid;
+      gap: 3px;
+      padding: 6px;
+      border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--border));
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--warn) 8%, transparent);
+    }
+    .compatibility-warning strong {
+      color: var(--text);
+    }
+    .compatibility-warning dl {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .compatibility-warning dl > div {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+    }
+    .compatibility-priority {
+      display: inline-flex;
+      width: fit-content;
+      padding: 1px 6px;
+      border-radius: 999px;
+      color: var(--text);
+      background: color-mix(in srgb, var(--warn) 18%, var(--panel-2));
+      font-size: 10px;
+      font-weight: 650;
     }
     button.chip {
       border: 0;
@@ -2527,6 +2746,7 @@ export function renderTaskGridHtml(
               </label>
             </div>
             ${renderHostCompatibilityProfiles()}
+            ${renderDependencyDiagnosticsSummary()}
             ${renderDiagnostics()}
           </div>
           <div class="detail-panel" data-detail-panel="advanced" id="detail-panel-advanced" role="tabpanel" aria-labelledby="detail-tab-advanced"${initialDetailTab === "advanced" ? "" : " hidden"}>
@@ -2557,7 +2777,7 @@ export function renderTaskGridHtml(
     webviewErrorOpenDiagnostics: labels.webviewErrorOpenDiagnostics,
     webviewErrorDismiss: labels.webviewErrorDismiss,
     exportUnavailable: labels.previewExportUnavailable
-  }, mermaidRuntimeVersion, shouldOpenDetails, initialDetailTab, options.initialDetailTab !== undefined, options.initialOpenDetailsWithRowActionMenu === true, options.enableUiReviewSnapshot === true, enableTestWebviewOperations, options.testWebviewGeneration, previewScheduleEditModel, initialPreviewEditMode, initialPreviewEditSelectedNodeId, options.hostBridgeScript)}
+  }, mermaidRuntimeVersion, shouldOpenDetails, initialDetailTab, options.initialDetailTab !== undefined, options.initialOpenDetailsWithRowActionMenu === true, options.enableUiReviewSnapshot === true, enableTestWebviewOperations, options.testWebviewGeneration, previewScheduleEditModel, initialPreviewEditMode, initialPreviewEditSelectedNodeId, initialHostCompatibilityProfile(hostCompatibility.profiles, preferHostCompatibilityWarningProfile).id, options.hostBridgeScript)}
 </body>
 </html>`;
 
@@ -2571,16 +2791,57 @@ export function renderTaskGridHtml(
         <div><dt>${escapeHtml(labels.diagnosticsStage)}</dt><dd>${escapeHtml(diagnostic.stage)}</dd></div>
         <div><dt>${escapeHtml(labels.diagnosticsLocation)}</dt><dd>${escapeHtml(formatRange(diagnostic.primaryRange))}</dd></div>
         <div><dt>${escapeHtml(labels.diagnosticsReason)}</dt><dd>${escapeHtml(renderDiagnosticMessage(diagnostic))}</dd></div>
-        <div><dt>${escapeHtml(labels.diagnosticsImpact)}</dt><dd>${escapeHtml(impactForDiagnostic(diagnostic.severity))}</dd></div>
+        <div><dt>${escapeHtml(labels.diagnosticsImpact)}</dt><dd>${escapeHtml(impactForDiagnostic(diagnostic))}</dd></div>
+        <div><dt>${escapeHtml(labels.diagnosticsNextStep)}</dt><dd>${escapeHtml(renderDiagnosticGuidance(diagnostic))}</dd></div>
       </dl>
       <code>${escapeHtml(diagnostic.primaryRaw)}</code>
+      ${renderRelatedSource(diagnostic)}
       <div class="action-label">${escapeHtml(labels.diagnosticsAction)}</div>
+      ${renderDiagnosticActionHint(diagnostic)}
       <div class="chips">${diagnostic.suggestedActions.map((action, actionIndex) => `<button class="chip" data-action="apply-diagnostic-action" data-diagnostic-code="${escapeHtml(diagnostic.code)}" data-start-offset="${escapeHtml(String(diagnostic.primaryRange.start.offset))}" data-action-index="${escapeHtml(String(actionIndex))}">${escapeHtml(renderDiagnosticActionLabel(diagnostic, action))}</button>`).join("")}</div>
     </div>`).join("");
   }
 
+  function renderDependencyDiagnosticsSummary(): string {
+    const dependencyDiagnostics = state.diagnostics.filter(isDependencyDiagnostic);
+    if (dependencyDiagnostics.length === 0) {
+      return "";
+    }
+    const undefinedCount = dependencyDiagnostics.filter((diagnostic) => diagnostic.code === "UNDEFINED_DEPENDENCY").length;
+    const selfCount = dependencyDiagnostics.filter((diagnostic) => diagnostic.code === "SELF_DEPENDENCY").length;
+    const cycleCount = dependencyDiagnostics.filter((diagnostic) => diagnostic.code === "CIRCULAR_DEPENDENCY").length;
+    const affectedItems = dependencyDiagnostics.slice(0, 5).map((diagnostic) => `<li><strong>${escapeHtml(diagnostic.code)}</strong>: <code>${escapeHtml(diagnostic.primaryRaw)}</code> ${escapeHtml(formatRange(diagnostic.primaryRange))}</li>`).join("");
+    return `<section class="dependency-summary" data-review-id="dependency-diagnostics-summary">
+      <h3>${escapeHtml(labels.dependencyIssues)}</h3>
+      <div class="summary-counts">
+        <span>${escapeHtml(labels.dependencyUndefinedReferences.replace("{0}", String(undefinedCount)))}</span>
+        <span>${escapeHtml(labels.dependencySelfReferences.replace("{0}", String(selfCount)))}</span>
+        <span>${escapeHtml(labels.dependencyCycles.replace("{0}", String(cycleCount)))}</span>
+      </div>
+      <strong>${escapeHtml(labels.dependencyAffectedReferences)}</strong>
+      <ul>${affectedItems}</ul>
+    </section>`;
+  }
+
+  function renderRelatedSource(diagnostic: EditorState["diagnostics"][number]): string {
+    if (!diagnostic.relatedRanges || diagnostic.relatedRanges.length === 0) {
+      return "";
+    }
+    return `<div class="action-label">${escapeHtml(labels.diagnosticsRelatedSource)}</div>
+      <ul class="related-source-list">${diagnostic.relatedRanges.map((range) => `<li><code>${escapeHtml(range.raw ?? "")}</code> ${escapeHtml(formatRange(range))}</li>`).join("")}</ul>`;
+  }
+
+  function renderDiagnosticActionHint(diagnostic: EditorState["diagnostics"][number]): string {
+    const hasDependencyQuickFix = diagnostic.code === "UNDEFINED_DEPENDENCY" &&
+      diagnostic.suggestedActions.some((action) => action.kind === "quick-fix" && action.replacement?.text);
+    return hasDependencyQuickFix
+      ? `<p class="diagnostic-helper">${escapeHtml(labels.dependencyQuickFixHint)}</p>`
+      : "";
+  }
+
   function renderHostCompatibilityProfiles(): string {
     const profiles = hostCompatibility.profiles;
+    const initialProfile = initialHostCompatibilityProfile(profiles, preferHostCompatibilityWarningProfile);
     return `<section class="compatibility-panel" data-review-id="host-compatibility-profile">
       <h3>${escapeHtml(labels.hostCompatibility)}</h3>
       <p>${escapeHtml(labels.hostCompatibilityGuidance)}</p>
@@ -2588,19 +2849,34 @@ export function renderTaskGridHtml(
         <dl>
           <dt>${escapeHtml(labels.mermaidRuntime)}</dt><dd>${escapeHtml(labels.mermaidRuntimeBundledVersion.replace("{0}", mermaidRuntimeVersion))}</dd>
           <dt>${escapeHtml(labels.mermaidRuntimeSecurityLevel)}</dt><dd>strict</dd>
-          <dt>${escapeHtml(labels.hostCompatibilitySelectedProfile)}</dt><dd data-host-profile-active-label>${escapeHtml(profiles[0]?.label ?? labels.hostCompatibilityProfileMermaidLatest)}</dd>
+          <dt>${escapeHtml(labels.hostCompatibilitySelectedProfile)}</dt><dd data-host-profile-active-label>${escapeHtml(initialProfile.label)}</dd>
         </dl>
         <p>${escapeHtml(labels.mermaidRuntimeDeterministic)}</p>
       </div>
-      <div class="compatibility-profiles" role="group" aria-label="${escapeHtml(labels.hostCompatibilitySelectedProfile)}">${profiles.map((profile, index) => `<button type="button" class="compatibility-profile${index === 0 ? " active" : ""}" data-host-profile="${escapeHtml(profile.id)}" data-host-profile-option="${escapeHtml(profile.id)}" aria-pressed="${index === 0 ? "true" : "false"}">${escapeHtml(profile.label)}</button>`).join("")}</div>
-      ${profiles.map((profile, index) => `<div class="compatibility-profile-card" data-host-profile-card="${escapeHtml(profile.id)}" data-review-id="host-compatibility-${escapeHtml(profile.id)}"${index === 0 ? "" : " hidden"}>
+      <strong>${escapeHtml(labels.hostCompatibilityProfileSummary)}</strong>
+      <div class="compatibility-profile-summary" data-review-id="host-compatibility-profile-summary">
+        ${profiles.map((profile) => `<div class="compatibility-profile-summary-card">
+          <strong>${escapeHtml(profile.label)}</strong>
+          <span class="compatibility-status ${profile.status === "warning" ? "warning" : "ok"}">${escapeHtml(labels.hostCompatibilityStatus)}: ${escapeHtml(profile.status === "warning" ? labels.hostCompatibilityStatusVerify : labels.hostCompatibilityStatusOk)}</span>
+          <span>${escapeHtml(labels.hostCompatibilityWarningCount.replace("{0}", String(profile.warnings.length)))}</span>
+        </div>`).join("")}
+      </div>
+      <div class="compatibility-profiles" role="group" aria-label="${escapeHtml(labels.hostCompatibilitySelectedProfile)}">${profiles.map((profile) => `<button type="button" class="compatibility-profile${profile.id === initialProfile.id ? " active" : ""}" data-host-profile="${escapeHtml(profile.id)}" data-host-profile-option="${escapeHtml(profile.id)}" aria-pressed="${profile.id === initialProfile.id ? "true" : "false"}">${escapeHtml(profile.label)}</button>`).join("")}</div>
+      ${profiles.map((profile) => `<div class="compatibility-profile-card" data-host-profile-card="${escapeHtml(profile.id)}" data-review-id="host-compatibility-${escapeHtml(profile.id)}"${profile.id === initialProfile.id ? "" : " hidden"}>
         <dl>
           <dt>${escapeHtml(labels.hostCompatibilitySelectedProfile)}</dt><dd>${escapeHtml(profile.label)}</dd>
           <dt>${escapeHtml(labels.mermaidRuntime)}</dt><dd>${escapeHtml(profile.runtimeLabel)}</dd>
           <dt>${escapeHtml(labels.hostCompatibilityRiskySyntax)}</dt><dd>${escapeHtml(String(profile.warnings.length))}</dd>
         </dl>
         ${profile.warnings.length > 0
-          ? `<div><strong>${escapeHtml(labels.hostCompatibilityProfileWarnings)}</strong><ul>${profile.warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join("")}</ul></div>`
+          ? `<div><strong>${escapeHtml(labels.hostCompatibilityProfileWarnings)}</strong><ul class="compatibility-warning-list">${profile.warnings.map((warning) => `<li class="compatibility-warning">
+            <strong>${escapeHtml(warning.reason)}</strong>
+            <dl>
+              <div><dt>${escapeHtml(labels.hostCompatibilityPriority)}</dt><dd><span class="compatibility-priority">${escapeHtml(renderHostCompatibilityPriority(warning.priority, labels))}</span></dd></div>
+              <div><dt>${escapeHtml(labels.hostCompatibilityProfileImpact)}</dt><dd>${escapeHtml(warning.impact)}</dd></div>
+              <div><dt>${escapeHtml(labels.hostCompatibilityProfileNextStep)}</dt><dd>${escapeHtml(warning.nextStep)}</dd></div>
+            </dl>
+          </li>`).join("")}</ul></div>`
           : `<p>${escapeHtml(labels.hostCompatibilityNoWarnings)}</p>`}
       </div>`).join("")}
       <div class="chips">
@@ -2628,6 +2904,16 @@ export function renderTaskGridHtml(
 
   function renderDiagnosticMessage(diagnostic: EditorState["diagnostics"][number]): string {
     return labels.diagnosticMessages?.[diagnostic.messageKey] ?? diagnostic.summary ?? diagnostic.messageKey;
+  }
+
+  function renderDiagnosticGuidance(diagnostic: EditorState["diagnostics"][number]): string {
+    return labels.diagnosticGuidance?.[diagnostic.messageKey] ?? labels.diagnosticImpact;
+  }
+
+  function isDependencyDiagnostic(diagnostic: EditorState["diagnostics"][number]): boolean {
+    return diagnostic.code === "UNDEFINED_DEPENDENCY" ||
+      diagnostic.code === "SELF_DEPENDENCY" ||
+      diagnostic.code === "CIRCULAR_DEPENDENCY";
   }
 
   function renderAdvancedSourceItems(): string {
@@ -3198,11 +3484,13 @@ export function renderTaskGridHtml(
     const diagnostics = preview.diagnostics.length > 0
       ? preview.diagnostics.map((diagnostic) => `<p class="format-preview-warning">${escapeHtml(diagnostic)}</p>`).join("")
       : "";
+    const diff = formatSourceDiffSides(preview.before, preview.after);
     return `<section class="format-review" data-review-id="format-review">
       <div class="format-review-header">
         <div class="format-review-heading">
           <p class="format-preview-title">${escapeHtml(labels.formatPreview)}</p>
           <p class="format-preview-summary">${escapeHtml(labels.formatPreviewSummary.replace("{0}", String(preview.changedLineCount)))}</p>
+          ${renderFormatSummary(preview.summary)}
           ${diagnostics}
         </div>
         <div class="format-review-actions">
@@ -3213,14 +3501,43 @@ export function renderTaskGridHtml(
       <div class="format-diff">
         <section>
           <h3>${escapeHtml(labels.beforeFormatting)}</h3>
-          <pre class="format-source-code">${highlightMermaidGanttSource(preview.before)}</pre>
+          <pre class="format-source-code">${renderFormatSourceDiffLines(diff.before)}</pre>
         </section>
         <section>
           <h3>${escapeHtml(labels.afterFormatting)}</h3>
-          <pre class="format-source-code">${highlightMermaidGanttSource(preview.after)}</pre>
+          <pre class="format-source-code">${renderFormatSourceDiffLines(diff.after)}</pre>
         </section>
       </div>
     </section>`;
+  }
+
+  function renderFormatSummary(summary: GanttFormatChangeSummary): string {
+    const kindPills = summary.changeKinds
+      .map((kind) => `<span class="format-summary-pill">${escapeHtml(formatChangeKindLabel(kind))}</span>`)
+      .join("");
+    const preservedUnsafeTask = summary.preservedUnsafeTaskCount > 0
+      ? `<span class="format-summary-pill warning">${escapeHtml(labels.formatSummaryPreservedUnsafeTasks)} <strong>${summary.preservedUnsafeTaskCount}</strong></span>`
+      : "";
+    return `<div class="format-summary-row" aria-label="${escapeHtml(labels.formatPreview)}">
+      <span class="format-summary-pill">${escapeHtml(labels.formatSummaryLines)} <strong>${summary.changedLineCount}</strong></span>
+      <span class="format-summary-pill">${escapeHtml(labels.formatSummaryTasks)} <strong>${summary.changedTaskCount}</strong></span>
+      <span class="format-summary-pill">${escapeHtml(labels.formatSummarySections)} <strong>${summary.changedSectionCount}</strong></span>
+      ${kindPills}
+      ${preservedUnsafeTask}
+    </div>`;
+  }
+
+  function formatChangeKindLabel(kind: GanttFormatChangeKind): string {
+    switch (kind) {
+      case "indent":
+        return labels.formatSummaryIndent;
+      case "task-colon-alignment":
+        return labels.formatSummaryTaskColonAlignment;
+      case "blank-line":
+        return labels.formatSummaryBlankLines;
+      case "other":
+        return labels.formatSummaryOther;
+    }
   }
 
   function renderAddSectionButton(): string {
@@ -3250,8 +3567,12 @@ export function renderTaskGridHtml(
       : `lines ${range.start.line}:${range.start.column}-${range.end.line}:${range.end.column}`;
   }
 
-  function impactForDiagnostic(severity: "error" | "warning" | "info"): string {
-    if (state.mode === "fallback" || severity === "error") {
+  function impactForDiagnostic(diagnostic: EditorState["diagnostics"][number]): string {
+    const specificImpact = labels.diagnosticImpacts?.[diagnostic.messageKey];
+    if (specificImpact) {
+      return specificImpact;
+    }
+    if (state.mode === "fallback" || diagnostic.severity === "error") {
       return labels.fallbackImpact;
     }
     if (!state.previewSource) {
@@ -3424,8 +3745,97 @@ function highlightMermaidGanttLine(line: string): string {
   return escapeHtml(line);
 }
 
-function highlightMermaidGanttSource(source: string): string {
-  return source.split("\n").map(highlightMermaidGanttLine).join("\n") || "\n";
+interface FormatDiffLine {
+  text: string;
+  marker: "" | "+" | "-";
+}
+
+function renderFormatSourceDiffLines(lines: FormatDiffLine[]): string {
+  const rendered = lines.map((line) => {
+    const stateClass = line.marker === "+"
+      ? " added"
+      : line.marker === "-"
+        ? " removed"
+        : "";
+    const marker = line.marker || " ";
+    const content = line.text.length > 0 ? highlightMermaidGanttLine(line.text) : "\u200B";
+    return `<span class="format-source-line${stateClass}"><span class="format-diff-gutter">${marker}</span>${content}</span>`;
+  }).join("");
+  return rendered || `<span class="format-source-line"><span class="format-diff-gutter"> </span>\u200B</span>`;
+}
+
+function formatSourceDiffSides(before: string, after: string): { before: FormatDiffLine[]; after: FormatDiffLine[] } {
+  const beforeLines = splitFormatSourceLines(before);
+  const afterLines = splitFormatSourceLines(after);
+  const pairs = commonLinePairs(beforeLines, afterLines);
+  const beforeDiff: FormatDiffLine[] = [];
+  const afterDiff: FormatDiffLine[] = [];
+  let beforeIndex = 0;
+  let afterIndex = 0;
+
+  for (const pair of pairs) {
+    while (beforeIndex < pair.beforeIndex) {
+      beforeDiff.push({ text: beforeLines[beforeIndex] ?? "", marker: "-" });
+      beforeIndex += 1;
+    }
+    while (afterIndex < pair.afterIndex) {
+      afterDiff.push({ text: afterLines[afterIndex] ?? "", marker: "+" });
+      afterIndex += 1;
+    }
+    beforeDiff.push({ text: beforeLines[pair.beforeIndex] ?? "", marker: "" });
+    afterDiff.push({ text: afterLines[pair.afterIndex] ?? "", marker: "" });
+    beforeIndex = pair.beforeIndex + 1;
+    afterIndex = pair.afterIndex + 1;
+  }
+
+  while (beforeIndex < beforeLines.length) {
+    beforeDiff.push({ text: beforeLines[beforeIndex] ?? "", marker: "-" });
+    beforeIndex += 1;
+  }
+  while (afterIndex < afterLines.length) {
+    afterDiff.push({ text: afterLines[afterIndex] ?? "", marker: "+" });
+    afterIndex += 1;
+  }
+
+  return { before: beforeDiff, after: afterDiff };
+}
+
+function splitFormatSourceLines(source: string): string[] {
+  const lines = source.split(/\r\n|\n/);
+  if (lines.length > 1 && lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+  return lines;
+}
+
+function commonLinePairs(beforeLines: string[], afterLines: string[]): Array<{ beforeIndex: number; afterIndex: number }> {
+  const rows = beforeLines.length;
+  const columns = afterLines.length;
+  const lengths: number[][] = Array.from({ length: rows + 1 }, () => Array(columns + 1).fill(0));
+
+  for (let beforeIndex = rows - 1; beforeIndex >= 0; beforeIndex -= 1) {
+    for (let afterIndex = columns - 1; afterIndex >= 0; afterIndex -= 1) {
+      lengths[beforeIndex][afterIndex] = beforeLines[beforeIndex] === afterLines[afterIndex]
+        ? lengths[beforeIndex + 1][afterIndex + 1] + 1
+        : Math.max(lengths[beforeIndex + 1][afterIndex], lengths[beforeIndex][afterIndex + 1]);
+    }
+  }
+
+  const pairs: Array<{ beforeIndex: number; afterIndex: number }> = [];
+  let beforeIndex = 0;
+  let afterIndex = 0;
+  while (beforeIndex < rows && afterIndex < columns) {
+    if (beforeLines[beforeIndex] === afterLines[afterIndex]) {
+      pairs.push({ beforeIndex, afterIndex });
+      beforeIndex += 1;
+      afterIndex += 1;
+    } else if (lengths[beforeIndex + 1][afterIndex] >= lengths[beforeIndex][afterIndex + 1]) {
+      beforeIndex += 1;
+    } else {
+      afterIndex += 1;
+    }
+  }
+  return pairs;
 }
 
 function summarizeHostCompatibility(state: EditorState, labels: TaskGridWebviewLabels, mermaidRuntimeVersion: string): {
@@ -3442,28 +3852,39 @@ function summarizeHostCompatibility(state: EditorState, labels: TaskGridWebviewL
   });
   const retainedClickItems = retainedSourceItems.filter((item) => item.kind === "ClickStmt");
   const retainedConfigItems = retainedSourceItems.filter((item) => item.kind === "FrontmatterBlock" || item.kind === "DirectiveBlock");
-  const genericWarnings = [
-    ...hostSensitiveDiagnostics.map((diagnostic) => diagnostic.summary ?? diagnostic.messageKey),
-    ...topAxisDiagnostics.map((diagnostic) => diagnostic.summary ?? diagnostic.messageKey)
+  const genericWarnings: HostCompatibilityProfileWarning[] = [
+    ...hostSensitiveDiagnostics.map(() => ({
+      reason: labels.hostCompatibilityWarningSourcePreserved,
+      impact: labels.hostCompatibilityImpactSourcePreserved,
+      nextStep: labels.hostCompatibilityNextStepSourcePreserved,
+      priority: "medium" as const
+    })),
+    ...topAxisDiagnostics.map((diagnostic) => ({
+      reason: diagnostic.summary ?? labels.diagnosticMessages?.[diagnostic.messageKey] ?? diagnostic.messageKey,
+      impact: labels.hostCompatibilityImpactSourcePreserved,
+      nextStep: labels.hostCompatibilityNextStepSourcePreserved,
+      priority: "high" as const
+    }))
   ];
-  const profileWarnings = (profileId: HostCompatibilityProfileId): string[] => {
-    const warnings = [...genericWarnings];
+  const profileWarnings = (profileId: HostCompatibilityProfileId): HostCompatibilityProfileWarning[] => {
+    const warnings = profileId === "mermaid-latest" ? [] : [...genericWarnings];
     if (profileId !== "mermaid-latest" && retainedClickItems.length > 0) {
-      warnings.push(labels.hostCompatibilityWarningClickCall);
+      warnings.push({
+        reason: labels.hostCompatibilityWarningClickCall,
+        impact: labels.hostCompatibilityImpactClickCall,
+        nextStep: labels.hostCompatibilityNextStepClickCall,
+        priority: "medium"
+      });
     }
     if (profileId !== "mermaid-latest" && retainedConfigItems.length > 0) {
-      warnings.push(labels.hostCompatibilityWarningConfig);
+      warnings.push({
+        reason: labels.hostCompatibilityWarningConfig,
+        impact: labels.hostCompatibilityImpactConfig,
+        nextStep: labels.hostCompatibilityNextStepConfig,
+        priority: "medium"
+      });
     }
-    if (profileId === "gitlab") {
-      warnings.push(labels.hostCompatibilityWarningGitLab);
-    }
-    if (profileId === "github") {
-      warnings.push(labels.hostCompatibilityWarningGitHub);
-    }
-    if (profileId === "obsidian") {
-      warnings.push(labels.hostCompatibilityWarningObsidian);
-    }
-    return Array.from(new Set(warnings));
+    return sortHostCompatibilityWarnings(dedupeHostCompatibilityWarnings(warnings));
   };
   const profiles: Array<{ id: HostCompatibilityProfileId; label: string; runtimeLabel: string }> = [
     {
@@ -3487,6 +3908,57 @@ function summarizeHostCompatibility(state: EditorState, labels: TaskGridWebviewL
       };
     })
   };
+}
+
+function dedupeHostCompatibilityWarnings(warnings: HostCompatibilityProfileWarning[]): HostCompatibilityProfileWarning[] {
+  const seen = new Set<string>();
+  return warnings.filter((warning) => {
+    const key = `${warning.reason}\n${warning.impact}\n${warning.nextStep}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function sortHostCompatibilityWarnings(warnings: HostCompatibilityProfileWarning[]): HostCompatibilityProfileWarning[] {
+  const order: Record<HostCompatibilityWarningPriority, number> = {
+    high: 0,
+    medium: 1,
+    low: 2
+  };
+  return [...warnings].sort((left, right) => order[left.priority] - order[right.priority]);
+}
+
+function renderHostCompatibilityPriority(
+  priority: HostCompatibilityWarningPriority,
+  labels: TaskGridWebviewLabels
+): string {
+  switch (priority) {
+    case "high":
+      return labels.hostCompatibilityPriorityHigh;
+    case "medium":
+      return labels.hostCompatibilityPriorityMedium;
+    case "low":
+      return labels.hostCompatibilityPriorityLow;
+  }
+}
+
+function initialHostCompatibilityProfile(
+  profiles: HostCompatibilityProfileSummary[],
+  preferWarningProfile: boolean
+): HostCompatibilityProfileSummary {
+  return (
+    (preferWarningProfile ? profiles.find((profile) => profile.warnings.length > 0) : undefined) ??
+    profiles[0] ?? {
+      id: "mermaid-latest",
+      label: "Mermaid latest",
+      runtimeLabel: "",
+      status: "ok",
+      warnings: []
+    }
+  );
 }
 
 function normalizeInitialPreviewZoom(value: TaskGridWebviewOptions["initialPreviewZoom"]): NonNullable<TaskGridWebviewOptions["initialPreviewZoom"]> {
@@ -3550,6 +4022,7 @@ function renderScript(
   previewScheduleEditModel: PreviewScheduleEditModel,
   initialPreviewEditMode: boolean,
   initialPreviewEditSelectedNodeId: string | undefined,
+  initialHostProfileId: HostCompatibilityProfileId,
   hostBridgeScriptOption: string | undefined
 ): string {
   const sourceLiteral = jsonForScript(previewSource ?? "");
@@ -3562,6 +4035,7 @@ function renderScript(
   const hostBridgeScript = renderHostBridgeScript(hostBridgeScriptOption);
   const initialDetailsLiteral = shouldOpenDetails ? "true" : "false";
   const initialDetailTabLiteral = jsonForScript(initialDetailTab);
+  const initialHostProfileLiteral = jsonForScript(initialHostProfileId);
   const forceInitialDetailTabLiteral = forceInitialDetailTab ? "true" : "false";
   const preserveInitialRowActionMenuLiteral = preserveInitialRowActionMenu ? "true" : "false";
   const enableUiReviewSnapshotLiteral = enableUiReviewSnapshot ? "true" : "false";
@@ -3869,7 +4343,7 @@ function renderScript(
     const storedPreviewScrollTop = Number.isFinite(storedDetails?.previewScrollTop)
       ? Math.max(0, Math.round(storedDetails.previewScrollTop))
       : 0;
-    const storedHostProfile = typeof storedDetails?.hostProfile === "string" ? storedDetails.hostProfile : "mermaid-latest";
+    const storedHostProfile = typeof storedDetails?.hostProfile === "string" ? storedDetails.hostProfile : ${initialHostProfileLiteral};
     const initialDetailsOpen = defaultDetailsOpen || storedDetailsOpen;
     const initialDetailsTab = ${forceInitialDetailTabLiteral} ? ${initialDetailTabLiteral} : storedDetailsTab ?? ${initialDetailTabLiteral};
     function activeLayout() {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatGanttSource } from "../../src/core";
+import { formatGanttSource, summarizeGanttFormatChanges } from "../../src/core";
 
 describe("formatGanttSource", () => {
   it("uses official four-space indentation and aligns task colons", () => {
@@ -75,6 +75,68 @@ describe("formatGanttSource", () => {
         code: "FORMAT_DISABLED",
         message: "Mermaid Gantt formatting is disabled."
       }]
+    });
+  });
+});
+
+describe("summarizeGanttFormatChanges", () => {
+  it("summarizes indentation and task colon alignment changes", () => {
+    const before = [
+      "gantt",
+      "title Product Plan",
+      "Task A:a1, 1d",
+      "Review:after a1, 2d",
+      ""
+    ].join("\n");
+    const result = formatGanttSource(before);
+    const summary = summarizeGanttFormatChanges(before, result.source, result.diagnostics);
+
+    expect(summary.changedLineCount).toBe(3);
+    expect(summary.changedTaskCount).toBe(2);
+    expect(summary.changeKinds).toEqual(["indent", "task-colon-alignment"]);
+  });
+
+  it("summarizes blank line insertions between sections", () => {
+    const before = [
+      "gantt",
+      "section Planning",
+      "Task A:a1, 1d",
+      "section Build",
+      "Task B:b1, after a1, 1d",
+      ""
+    ].join("\n");
+    const result = formatGanttSource(before);
+    const summary = summarizeGanttFormatChanges(before, result.source, result.diagnostics);
+
+    expect(summary.changedLineCount).toBeGreaterThan(0);
+    expect(summary.changedSectionCount).toBeGreaterThan(0);
+    expect(summary.changeKinds).toContain("blank-line");
+  });
+
+  it("counts preserved unsafe task diagnostics", () => {
+    const summary = summarizeGanttFormatChanges("gantt\nTask A : a1, 3dX\n", "gantt\nTask A : a1, 3dX\n", [{
+      code: "FORMAT_UNSAFE_TASK_PRESERVED",
+      message: "A task row was left unchanged because its metadata could not be formatted safely."
+    }]);
+
+    expect(summary).toEqual({
+      changedLineCount: 0,
+      changedTaskCount: 0,
+      changedSectionCount: 0,
+      changeKinds: [],
+      preservedUnsafeTaskCount: 1
+    });
+  });
+
+  it("returns zero counts when source is unchanged", () => {
+    const summary = summarizeGanttFormatChanges("gantt\n    Task A :a1, 1d\n", "gantt\n    Task A :a1, 1d\n");
+
+    expect(summary).toEqual({
+      changedLineCount: 0,
+      changedTaskCount: 0,
+      changedSectionCount: 0,
+      changeKinds: [],
+      preservedUnsafeTaskCount: 0
     });
   });
 });

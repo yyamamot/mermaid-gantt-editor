@@ -138,8 +138,17 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain("Inspector");
     expect(html).toContain("Document Settings");
     expect(html).toContain("Task Label");
-    expect(html).toContain("Structured editing is limited");
-    expect(html).toContain("Dependency references an unknown task ID.");
+    expect(html).toContain("source-preserving write-back");
+    expect(html).toContain("Dependency target does not exist, so the schedule cannot resolve this task.");
+    expect(html).toContain("Dependency issues");
+    expect(html).toContain("Undefined references: 1");
+    expect(html).toContain("Self references: 0");
+    expect(html).toContain("Cycles: 0");
+    expect(html).toContain("Affected references");
+    expect(html).toContain('data-review-id="dependency-diagnostics-summary"');
+    expect(html).toContain("Next step");
+    expect(html).toContain("The task cannot be scheduled because the referenced ID is missing.");
+    expect(html).toContain("Choose an existing task ID or remove this dependency.");
     expect(html).toContain("Choose an existing task ID");
     expect(html).not.toContain("diagnostics.undefinedDependency");
     expect(html).toContain("Stage");
@@ -283,6 +292,45 @@ describe("renderTaskGridHtml", () => {
 
     expect(html).toContain(">Use dependency a1</button>");
     expect(html).toContain('data-diagnostic-code="UNDEFINED_DEPENDENCY"');
+  });
+
+  it("renders dependency diagnostics summary and related source guidance", () => {
+    const state = createEditorState(parseGanttLossless([
+      "gantt",
+      "Task A : a1, after b1, 1d",
+      "Task B : b1, after a1, 1d",
+      "Task C : c1, after c1, 1d",
+      "Task D : d1, after missing, 1d"
+    ].join("\n") + "\n"));
+    const html = renderTaskGridHtml(state, labels(), {
+      initialDetailsOpen: true,
+      initialDetailTab: "diagnostics"
+    });
+
+    expect(html).toContain("Dependency issues");
+    expect(html).toContain("Undefined references: 1");
+    expect(html).toContain("Self references: 1");
+    expect(html).toContain("Cycles: 2");
+    expect(html).toContain("Affected references");
+    expect(html).toContain("Dependency chain contains a cycle, so task order cannot be resolved.");
+    expect(html).toContain("Task waits for itself, so the schedule cannot resolve this dependency.");
+    expect(html).toContain("Dependency target does not exist, so the schedule cannot resolve this task.");
+    expect(html).toContain("Related source");
+    expect(html).toContain("Task A");
+    expect(html).toContain("Task B");
+    expect(html).toContain("Quick fixes replace this reference with an existing task ID.");
+  });
+
+  it("does not render dependency diagnostics summary without dependency issues", () => {
+    const state = createEditorState(parseGanttLossless([
+      "gantt",
+      "Task A : a1, 2026-01-01, 1d",
+      "Task B : b1, after a1, 1d"
+    ].join("\n") + "\n"));
+    const html = renderTaskGridHtml(state, labels());
+
+    expect(html).not.toContain('data-review-id="dependency-diagnostics-summary"');
+    expect(html).not.toContain("Dependency issues");
   });
 
   it("can render editable cells with a nonce-bound script", () => {
@@ -589,6 +637,13 @@ describe("renderTaskGridHtml", () => {
         before: "gantt\nTask A:a1, 1d\n",
         after: "gantt\n    Task A :a1, 1d\n",
         changedLineCount: 1,
+        summary: {
+          changedLineCount: 1,
+          changedTaskCount: 1,
+          changedSectionCount: 0,
+          changeKinds: ["task-colon-alignment"],
+          preservedUnsafeTaskCount: 1
+        },
         diagnostics: ["A task row was left unchanged because its metadata could not be formatted safely."]
       }
     });
@@ -598,7 +653,16 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain("format-reviewing");
     expect(html).toContain("Format preview");
     expect(html).toContain("1 lines will change.");
+    expect(html).toContain("Lines changed");
+    expect(html).toContain("Tasks affected");
+    expect(html).toContain("Sections affected");
+    expect(html).toContain("Colon alignment");
+    expect(html).toContain("Preserved unsafe tasks");
     expect(html).toContain('class="format-source-code"');
+    expect(html).toContain('class="format-source-line removed"');
+    expect(html).toContain('class="format-source-line added"');
+    expect(html).toContain('<span class="format-diff-gutter">-</span>');
+    expect(html).toContain('<span class="format-diff-gutter">+</span>');
     expect(html).toContain('<span class="tok-keyword">gantt</span>');
     expect(html).toContain('<span class="tok-label">Task A</span><span class="tok-punct">:</span><span class="tok-id">a1</span>, <span class="tok-duration">1d</span>');
     expect(html).toContain('<span class="tok-label">    Task A </span><span class="tok-punct">:</span><span class="tok-id">a1</span>, <span class="tok-duration">1d</span>');
@@ -614,6 +678,8 @@ describe("renderTaskGridHtml", () => {
     expect(html).toContain("repeat(2, minmax(0, 1fr))");
     expect(html).toContain(".format-diff pre");
     expect(html).toContain("max-width: 100%");
+    expect(html).toContain("--syntax-label: var(--input-fg)");
+    expect(html).toContain(".tok-label { color: var(--syntax-label); }");
     expect(html).toContain("A task row was left unchanged");
     expect(html).not.toContain('data-action="format-source"');
     expect(html).not.toContain('id="details-toggle"');
@@ -827,11 +893,11 @@ describe("renderTaskGridHtml", () => {
     const html = renderTaskGridHtml(state, labels(), { allowEditing: true });
 
     expect(state.mode).toBe("fallback");
-    expect(html).toContain("Unsupported in structured mode");
+    expect(html).toContain("Structured editing is paused because this source cannot be projected safely");
     expect(html).toContain('data-initial-detail-tab="diagnostics"');
     expect(html).not.toContain("Raw Source Editor");
     expect(html).not.toContain('data-action="replace-source"');
-    expect(html).toContain("Structured editing and preview are blocked");
+    expect(html).toContain("The source is preserved unchanged");
     expect(html).not.toContain('data-action="update-task-label"');
     expect(html).not.toContain('data-action="update-task-id"');
     expect(html).not.toContain('data-action="update-task-start"');
@@ -902,18 +968,31 @@ describe("renderTaskGridHtml", () => {
 
     expect(state.diagnostics.map((diagnostic) => diagnostic.code)).toContain("HOST_VERSION_SENSITIVE_SYNTAX");
     expect(html).toContain("HOST_VERSION_SENSITIVE_SYNTAX");
-    expect(html).toContain("This syntax may depend on the Mermaid host version.");
+    expect(html).toContain("This Mermaid syntax is source-safe in the editor");
+    expect(html).toContain("Keep it when the target host supports it");
     expect(html).toContain(">Check Mermaid host version</button>");
     expect(html).toContain(">Comment out compact display mode</button>");
     expect(html).toContain("1 compatibility warnings");
     expect(html).toContain("1 retained source items");
-    expect(html).toContain("&quot;hostCompatibility&quot;:{&quot;selectedProfile&quot;:&quot;mermaid-latest&quot;");
+    expect(html).toContain("&quot;selectedProfile&quot;:&quot;github&quot;");
     expect(html).toContain("&quot;warningCount&quot;:1,&quot;retainedSourceItemCount&quot;:1");
     expect(html).toContain("&quot;mermaidRuntime&quot;:{&quot;type&quot;:&quot;bundled&quot;,&quot;version&quot;:&quot;11.14.0&quot;");
     expect(html).toContain("Profile warnings");
+    expect(html).toContain("Host impact");
+    expect(html).toContain("Next step");
+    expect(html).toContain("Profile summary");
+    expect(html).toContain("Verify before publishing");
+    expect(html).toContain("Priority");
+    expect(html).toContain("Medium");
+    expect(html).toContain('data-review-id="host-compatibility-profile-summary"');
     expect(html).toContain("GitLab-hosted Mermaid");
-    expect(html).toContain("displayMode compact can depend on the Mermaid host version.");
-    expect(html).toContain("GitHub chooses the Mermaid runtime in the host");
+    expect(html).toContain("Version-sensitive Mermaid syntax is preserved in source.");
+    expect(html).toContain("some target hosts may ignore or render it differently");
+    expect(html).toContain("Use the quick fix only when you need safer cross-host rendering");
+    expect(html).not.toContain("GitHub chooses the Mermaid runtime in the host");
+    expect(html).not.toContain("Preview the Markdown on GitHub");
+    expect(html).not.toContain("GitLab-hosted Mermaid rendering can lag bundled Mermaid");
+    expect(html).not.toContain("Obsidian Mermaid behavior depends on the app/plugin version");
     expect(html).toContain('data-action="apply-diagnostic-action"');
     expect(html).not.toContain("diagnostics.hostVersionSensitiveSyntax");
     expect(html).not.toContain("displayMode: compact</button>");
@@ -1317,6 +1396,14 @@ function labels(): TaskGridWebviewLabels {
     formatSource: "Format source",
     formatPreview: "Format preview",
     formatPreviewSummary: "{0} lines will change.",
+    formatSummaryLines: "Lines changed",
+    formatSummaryTasks: "Tasks affected",
+    formatSummarySections: "Sections affected",
+    formatSummaryIndent: "Indent",
+    formatSummaryTaskColonAlignment: "Colon alignment",
+    formatSummaryBlankLines: "Blank lines",
+    formatSummaryOther: "Other",
+    formatSummaryPreservedUnsafeTasks: "Preserved unsafe tasks",
     applyFormatting: "Apply formatting",
     cancelFormatting: "Cancel",
     beforeFormatting: "Before",
@@ -1341,9 +1428,9 @@ function labels(): TaskGridWebviewLabels {
     noTaskSelected: "No task selected.",
     noDiagnostics: "No diagnostics.",
     noAdvancedSourceItems: "No advanced source items.",
-    limitedEditing: "Preview source is unavailable. Structured editing is limited; review diagnostics and Advanced Source Items before writing back.",
-    fallbackEditing: "Unsupported in structured mode. Structured editing is disabled; review Diagnostics while the lossless source is preserved in the text editor.",
-    previewBlocked: "Preview source is blocked by projection issues. Review diagnostics or advanced source items.",
+    limitedEditing: "Preview source is unavailable. Supported grid fields still use source-preserving write-back; review Diagnostics and Advanced Source Items before writing back.",
+    fallbackEditing: "Structured editing is paused because this source cannot be projected safely. The original Mermaid text is preserved; review Diagnostics for the next step.",
+    previewBlocked: "Preview source is blocked because some source is retained for safety. Review Diagnostics or Advanced Source Items.",
     previewRenderFailed: "Preview render failed: ",
     previewBlockedTitle: "Preview blocked",
     previewRenderFailedTitle: "Preview render failed",
@@ -1367,27 +1454,58 @@ function labels(): TaskGridWebviewLabels {
     hostCompatibilityProfileObsidian: "Obsidian",
     hostCompatibilityWarningCount: "{0} compatibility warnings",
     hostCompatibilityRetainedCount: "{0} retained source items",
+    hostCompatibilityProfileSummary: "Profile summary",
+    hostCompatibilityStatus: "Status",
+    hostCompatibilityStatusOk: "Portable",
+    hostCompatibilityStatusVerify: "Verify before publishing",
     hostCompatibilityProfileWarnings: "Profile warnings",
     hostCompatibilityNoWarnings: "No profile-specific warnings for the current source.",
     hostCompatibilityRiskySyntax: "Risky syntax",
     hostCompatibilitySelectedProfile: "Target Host",
+    hostCompatibilityPriority: "Priority",
+    hostCompatibilityPriorityHigh: "High",
+    hostCompatibilityPriorityMedium: "Medium",
+    hostCompatibilityPriorityLow: "Low",
+    hostCompatibilityProfileImpact: "Host impact",
+    hostCompatibilityProfileNextStep: "Next step",
     hostCompatibilityRuntimeGitHub: "GitHub-hosted Mermaid",
     hostCompatibilityRuntimeGitLab: "GitLab-hosted Mermaid",
     hostCompatibilityRuntimeObsidian: "Obsidian-hosted Mermaid",
     hostCompatibilityWarningClickCall: "click / call statements are retained in source, but host interaction and security behavior can differ.",
+    hostCompatibilityImpactClickCall: "Links and callbacks may be disabled or handled differently by the target host security policy.",
+    hostCompatibilityNextStepClickCall: "Keep the source intact, then verify interactions in the target host before publishing.",
     hostCompatibilityWarningConfig: "frontmatter or init directives are retained; verify whether the target host accepts the same Mermaid config.",
+    hostCompatibilityImpactConfig: "The diagram may render with a different theme, layout mode, or config support outside the bundled preview.",
+    hostCompatibilityNextStepConfig: "Keep the retained config unless you need cross-host safety; use diagnostics quick fixes only when available.",
     hostCompatibilityWarningGitHub: "GitHub chooses the Mermaid runtime in the host; use the preview as guidance, not as a guarantee.",
+    hostCompatibilityImpactGitHub: "Rendering can differ from the bundled preview when GitHub updates or restricts its Mermaid runtime.",
+    hostCompatibilityNextStepGitHub: "Preview the Markdown on GitHub, or prefer widely supported Mermaid Gantt syntax for published docs.",
     hostCompatibilityWarningGitLab: "GitLab-hosted Mermaid rendering can lag bundled Mermaid; verify syntax before publishing.",
+    hostCompatibilityImpactGitLab: "Newer Mermaid Gantt syntax may not render the same way on the target GitLab instance.",
+    hostCompatibilityNextStepGitLab: "Check the target GitLab Mermaid support and avoid version-sensitive syntax when portability matters.",
     hostCompatibilityWarningObsidian: "Obsidian Mermaid behavior depends on the app/plugin version and local settings.",
+    hostCompatibilityImpactObsidian: "Local Obsidian settings or plugins can change rendering compared with the bundled preview.",
+    hostCompatibilityNextStepObsidian: "Open the note in the target vault and verify the Mermaid preview before sharing.",
+    hostCompatibilityWarningSourcePreserved: "Version-sensitive Mermaid syntax is preserved in source.",
+    hostCompatibilityImpactSourcePreserved: "The editor will not remove it, but some target hosts may ignore or render it differently.",
+    hostCompatibilityNextStepSourcePreserved: "Use the quick fix only when you need safer cross-host rendering; otherwise verify in the target host.",
     diagnosticsStage: "Stage",
     diagnosticsLocation: "Location",
     diagnosticsReason: "Reason",
     diagnosticsImpact: "Impact",
+    diagnosticsNextStep: "Next step",
     diagnosticsAction: "Action",
+    diagnosticsRelatedSource: "Related source",
+    dependencyIssues: "Dependency issues",
+    dependencyUndefinedReferences: "Undefined references: {0}",
+    dependencySelfReferences: "Self references: {0}",
+    dependencyCycles: "Cycles: {0}",
+    dependencyAffectedReferences: "Affected references",
+    dependencyQuickFixHint: "Quick fixes replace this reference with an existing task ID.",
     removeBlockingReference: "Remove reference {0}",
     replaceBlockingReference: "Replace reference with {0}",
     useExistingTaskId: "Use dependency {0}",
-    fallbackImpact: "Structured editing and preview are blocked until this source can be projected safely.",
+    fallbackImpact: "The source is preserved unchanged; structured editing and preview stay paused until the unsafe range is resolved.",
     limitedEditingImpact: "Preview source is blocked; supported grid fields still use source-preserving write-back.",
     diagnosticImpact: "Review the highlighted source range before applying an action.",
     advancedSourceGuidance: "This retained source item is not currently editable in the grid. It stays in the source and can be edited in the text editor.",
@@ -1400,18 +1518,50 @@ function labels(): TaskGridWebviewLabels {
     diagnosticMessages: {
       "diagnostics.dateFormatMismatch": "Task date does not match dateFormat.",
       "diagnostics.duplicateTaskId": "Task ID is duplicated.",
-      "diagnostics.circularDependency": "Dependency graph contains a cycle.",
-      "diagnostics.hostVersionSensitiveSyntax": "This syntax may depend on the Mermaid host version.",
+      "diagnostics.circularDependency": "Dependency chain contains a cycle, so task order cannot be resolved.",
+      "diagnostics.hostVersionSensitiveSyntax": "This Mermaid syntax is source-safe in the editor, but GitHub, GitLab, or Obsidian may render it differently.",
       "diagnostics.includeExcludeConflict": "Includes and Excludes contain the same value.",
       "diagnostics.invalidTickInterval": "Tick Interval is invalid.",
       "diagnostics.keywordLikeTaskLabel": "Task label looks like a Mermaid keyword.",
       "diagnostics.longLabelReadability": "Task label may be hard to read in the preview.",
-      "diagnostics.selfDependency": "Task depends on itself.",
-      "diagnostics.undefinedDependency": "Dependency references an unknown task ID.",
+      "diagnostics.selfDependency": "Task waits for itself, so the schedule cannot resolve this dependency.",
+      "diagnostics.undefinedDependency": "Dependency target does not exist, so the schedule cannot resolve this task.",
       "diagnostics.topAxisPreviewUnsupported": "Top Axis is retained in source, but preview rendering is currently unsupported.",
       "diagnostics.editorTaskDeleteReferenced": "Task is referenced by dependency or click source.",
       "diagnostics.editorSectionDeleteReferenced": "Section contains tasks referenced from outside the section.",
       "diagnostics.editorInvalidTickInterval": "Tick Interval is invalid."
+    },
+    diagnosticImpacts: {
+      "diagnostics.dateFormatMismatch": "The task date may not be parsed by Mermaid using the document dateFormat.",
+      "diagnostics.duplicateTaskId": "Dependencies cannot resolve to exactly one task while this ID is duplicated.",
+      "diagnostics.circularDependency": "The schedule order cannot be resolved until the cycle is broken.",
+      "diagnostics.hostVersionSensitiveSyntax": "The editor preserves this source, but target hosts may render it differently.",
+      "diagnostics.includeExcludeConflict": "The same date or weekday has conflicting calendar rules.",
+      "diagnostics.invalidTickInterval": "Mermaid may reject or ignore the axis interval.",
+      "diagnostics.keywordLikeTaskLabel": "Mermaid may parse the label as a statement instead of a task.",
+      "diagnostics.longLabelReadability": "The chart can become hard to scan or clip task text in previews.",
+      "diagnostics.selfDependency": "The task cannot be scheduled because it waits for itself.",
+      "diagnostics.undefinedDependency": "The task cannot be scheduled because the referenced ID is missing.",
+      "diagnostics.topAxisPreviewUnsupported": "Bundled preview rendering is paused, but the source is kept intact.",
+      "diagnostics.editorTaskDeleteReferenced": "Deleting this task would leave another source reference broken.",
+      "diagnostics.editorSectionDeleteReferenced": "Deleting this section would leave outside references broken.",
+      "diagnostics.editorInvalidTickInterval": "The setting cannot be written back until the interval is valid."
+    },
+    diagnosticGuidance: {
+      "diagnostics.dateFormatMismatch": "Change this date to match the document dateFormat, or use the conversion quick fix when available.",
+      "diagnostics.duplicateTaskId": "Rename one duplicate task ID so dependencies can resolve to exactly one task.",
+      "diagnostics.circularDependency": "Change one dependency in the cycle.",
+      "diagnostics.hostVersionSensitiveSyntax": "Keep it when the target host supports it; use the quick fix only when you need safer cross-host rendering.",
+      "diagnostics.includeExcludeConflict": "Keep the date or weekday in either Includes or Excludes, not both.",
+      "diagnostics.invalidTickInterval": "Use a Mermaid tickInterval such as 1day, 1week, 1month, or apply the suggested value.",
+      "diagnostics.keywordLikeTaskLabel": "Rename or prefix this task label so Mermaid does not read it as a statement keyword.",
+      "diagnostics.longLabelReadability": "Shorten the label or review the rendered preview before publishing.",
+      "diagnostics.selfDependency": "Remove this dependency or choose a different task ID.",
+      "diagnostics.undefinedDependency": "Choose an existing task ID or remove this dependency.",
+      "diagnostics.topAxisPreviewUnsupported": "The statement is kept in source. Remove it only if you need bundled preview rendering.",
+      "diagnostics.editorTaskDeleteReferenced": "Remove or replace the blocking reference before deleting this task.",
+      "diagnostics.editorSectionDeleteReferenced": "Move, delete, or update outside references before deleting this section.",
+      "diagnostics.editorInvalidTickInterval": "Use a valid Mermaid tickInterval before writing back the setting."
     },
     diagnosticActionLabels: {
       "diagnostics.action.alignDateFormat": "Align task dates with dateFormat",

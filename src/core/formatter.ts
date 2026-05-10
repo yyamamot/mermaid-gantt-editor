@@ -26,6 +26,16 @@ export interface GanttFormatResult {
   diagnostics: GanttFormatDiagnostic[];
 }
 
+export type GanttFormatChangeKind = "indent" | "task-colon-alignment" | "blank-line" | "other";
+
+export interface GanttFormatChangeSummary {
+  changedLineCount: number;
+  changedTaskCount: number;
+  changedSectionCount: number;
+  changeKinds: GanttFormatChangeKind[];
+  preservedUnsafeTaskCount: number;
+}
+
 interface ResolvedGanttFormatOptions {
   enabled: boolean;
   indentMode: "official";
@@ -97,6 +107,32 @@ export function formatGanttSource(source: string, options: GanttFormatOptions = 
     source: formatted,
     changed: formatted !== source,
     diagnostics
+  };
+}
+
+export function summarizeGanttFormatChanges(
+  before: string,
+  after: string,
+  diagnostics: GanttFormatDiagnostic[] = []
+): GanttFormatChangeSummary {
+  const beforeLines = splitComparableLines(before);
+  const afterLines = splitComparableLines(after);
+  const max = Math.max(beforeLines.length, afterLines.length);
+  let changedLineCount = 0;
+
+  for (let index = 0; index < max; index += 1) {
+    const beforeLine = beforeLines[index] ?? "";
+    const afterLine = afterLines[index] ?? "";
+    changedLineCount += beforeLine === afterLine ? 0 : 1;
+  }
+  const nonBlankSummary = summarizeNonBlankChanges(beforeLines, afterLines);
+
+  return {
+    changedLineCount,
+    changedTaskCount: nonBlankSummary.changedTaskCount,
+    changedSectionCount: nonBlankSummary.changedSectionCount,
+    changeKinds: nonBlankSummary.changeKinds,
+    preservedUnsafeTaskCount: diagnostics.filter((diagnostic) => diagnostic.code === "FORMAT_UNSAFE_TASK_PRESERVED").length
   };
 }
 
@@ -195,6 +231,106 @@ function dominantLineEnding(source: string): string {
   const crlf = source.match(/\r\n/g)?.length ?? 0;
   const lf = (source.match(/\n/g)?.length ?? 0) - crlf;
   return crlf > lf ? "\r\n" : "\n";
+}
+
+function splitComparableLines(source: string): string[] {
+  const lines = source.split(/\r\n|\n/);
+  if (lines.length > 1 && lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+  return lines;
+}
+
+function parseSummaryTaskLine(line: string): { label: string; metadata: string } | undefined {
+  const trimmed = line.trim();
+  if (
+    trimmed === "" ||
+    trimmed === "gantt" ||
+    trimmed.startsWith("section ") ||
+    trimmed.startsWith("%%") ||
+    trimmed.startsWith("---") ||
+    /^acc(?:Title|Descr)\b/.test(trimmed) ||
+    /^[A-Za-z][A-Za-z]*(?:\s|$)/.test(trimmed) && !trimmed.includes(":")
+  ) {
+    return undefined;
+  }
+  const colonIndex = trimmed.indexOf(":");
+  if (colonIndex <= 0) {
+    return undefined;
+  }
+  const label = trimmed.slice(0, colonIndex).trim();
+  const metadata = trimmed.slice(colonIndex + 1).trim();
+  if (!label || !metadata) {
+    return undefined;
+  }
+  return { label, metadata };
+}
+
+function summarizeNonBlankChanges(
+  beforeLines: string[],
+  afterLines: string[]
+): Pick<GanttFormatChangeSummary, "changedTaskCount" | "changedSectionCount" | "changeKinds"> {
+  const beforeNonBlank = beforeLines.filter((line) => line.trim() !== "");
+  const afterNonBlank = afterLines.filter((line) => line.trim() !== "");
+  const max = Math.max(beforeNonBlank.length, afterNonBlank.length);
+  const changeKinds = new Set<GanttFormatChangeKind>();
+  const changedTasks = new Set<number>();
+  const changedSections = new Set<number>();
+
+  if (blankLineShape(beforeLines) !== blankLineShape(afterLines)) {
+    changeKinds.add("blank-line");
+  }
+
+  for (let index = 0; index < max; index += 1) {
+    const beforeLine = beforeNonBlank[index] ?? "";
+    const afterLine = afterNonBlank[index] ?? "";
+    if (beforeLine === afterLine) {
+      continue;
+    }
+    classifyNonBlankChange(beforeLine, afterLine, changeKinds);
+    if (parseSummaryTaskLine(beforeLine) || parseSummaryTaskLine(afterLine)) {
+      changedTasks.add(index);
+    }
+    if (isSummarySectionLine(beforeLine) || isSummarySectionLine(afterLine)) {
+      changedSections.add(index);
+    }
+  }
+
+  return {
+    changedTaskCount: changedTasks.size,
+    changedSectionCount: changedSections.size,
+    changeKinds: Array.from(changeKinds)
+  };
+}
+
+function classifyNonBlankChange(beforeLine: string, afterLine: string, changeKinds: Set<GanttFormatChangeKind>): void {
+  if (beforeLine.trim() === afterLine.trim()) {
+    changeKinds.add("indent");
+    return;
+  }
+  const beforeTask = parseSummaryTaskLine(beforeLine);
+  const afterTask = parseSummaryTaskLine(afterLine);
+  if (
+    beforeTask &&
+    afterTask &&
+    beforeTask.label === afterTask.label &&
+    beforeTask.metadata === afterTask.metadata &&
+    beforeLine.replace(/\s/g, "") === afterLine.replace(/\s/g, "")
+  ) {
+    changeKinds.add("task-colon-alignment");
+    return;
+  }
+  if (beforeLine.replace(/\s/g, "") !== afterLine.replace(/\s/g, "")) {
+    changeKinds.add("other");
+  }
+}
+
+function isSummarySectionLine(line: string): boolean {
+  return /^section\s+.+$/.test(line.trim());
+}
+
+function blankLineShape(lines: string[]): string {
+  return lines.map((line) => line.trim() === "" ? "0" : "1").join("");
 }
 
 function rawContentLines(raw: string): string[] {

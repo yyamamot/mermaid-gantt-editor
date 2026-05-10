@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.4 (2026-05-10)
+
+### Changed
+
+- Improve Diagnostics and fallback guidance with source-safe impact, dependency summaries, related source, and clearer next steps.
+- Improve Format Review with concise change summaries and compact git-style changed-line markers.
+- Improve Host Compatibility guidance with profile status, warning priority, host impact, and next steps.
+- Improve Format Review readability in VS Code light themes.
+
 ## 0.0.3 (2026-05-07)
 
 ### Added

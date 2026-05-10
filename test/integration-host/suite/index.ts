@@ -25,6 +25,7 @@ function todayLiteral(dateFormat = "YYYY-MM-DD"): string {
 export async function run(): Promise<void> {
   await activateDevelopmentExtension();
   if (process.env.MERMAID_GANTT_HOST_SUITE_MODE === "nightly-visual") {
+    await applyNightlyVisualColorTheme();
     await testCommandsAreRegistered();
     await testNightlyVisualSmokeScenarioFromManifest();
     await testRuntimeJsonlWasWritten();
@@ -92,6 +93,14 @@ async function activateDevelopmentExtension(): Promise<void> {
   const extension = vscode.extensions.getExtension("yyamamot.mermaid-gantt-editor");
   assert.ok(extension, "development extension yyamamot.mermaid-gantt-editor is not available");
   await extension.activate();
+}
+
+async function applyNightlyVisualColorTheme(): Promise<void> {
+  const colorTheme = process.env.MERMAID_GANTT_TEST_COLOR_THEME?.trim();
+  if (!colorTheme) {
+    return;
+  }
+  await vscode.workspace.getConfiguration("workbench").update("colorTheme", colorTheme, vscode.ConfigurationTarget.Global);
 }
 
 async function testCommandsAreRegistered(): Promise<void> {

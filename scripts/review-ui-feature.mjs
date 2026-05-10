@@ -41,6 +41,13 @@ const scenarioAliases = new Map([
     path: "fixtures/harness/nightly-visual-format-preview/scenario.json",
     env: { MERMAID_GANTT_TEST_PREVIEW_COLLAPSED: "1" }
   }],
+  ["format-preview-light", {
+    path: "fixtures/harness/nightly-visual-format-preview/scenario.json",
+    env: {
+      MERMAID_GANTT_TEST_PREVIEW_COLLAPSED: "1",
+      MERMAID_GANTT_TEST_COLOR_THEME: "Default Light Modern"
+    }
+  }],
   ["ja-responsive", {
     path: "fixtures/harness/nightly-visual-ja-responsive/scenario.json",
     env: {

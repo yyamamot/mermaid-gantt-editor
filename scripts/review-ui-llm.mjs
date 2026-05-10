@@ -202,7 +202,8 @@ function envFromCurrentProcess() {
     "MERMAID_GANTT_TEST_RESPONSIVE_MODE",
     "MERMAID_GANTT_TEST_OPEN_DETAILS",
     "MERMAID_GANTT_TEST_OPEN_ROW_ACTION_MENU",
-    "MERMAID_GANTT_TEST_OPEN_DETAILS_WITH_ROW_ACTION_MENU"
+    "MERMAID_GANTT_TEST_OPEN_DETAILS_WITH_ROW_ACTION_MENU",
+    "MERMAID_GANTT_TEST_COLOR_THEME"
   ];
   return Object.fromEntries(keys.filter((key) => process.env[key]).map((key) => [key, process.env[key]]));
 }

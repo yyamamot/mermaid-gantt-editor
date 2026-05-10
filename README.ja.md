@@ -4,22 +4,24 @@
 
 ## Overview
 
-`Mermaid Gantt Editor` は、Markdown や `.mmd` に書いた Mermaid Gantt を VS Code の GUI で編集するための拡張です。
+Markdown source と Git でレビューしやすい差分を保ったまま、Mermaid Gantt を GUI で編集できます。
 
-Task Grid で task label、ID、日付、期間、依存関係、タグを編集し、変更は元の Mermaid source に書き戻します。Mermaid text は repository に残るため、Pull Request でレビューでき、GitHub / GitLab / Obsidian などでも引き続き表示できます。
+`Mermaid Gantt Editor` は、開発計画、リリース計画、移行作業、調査タスクなどを Markdown で管理するチーム向けの VS Code 拡張です。Mermaid Gantt source を Task Grid として開き、task、日付、依存関係、タグ、section を編集して、元の `.mmd` file または Markdown fenced block に書き戻します。
 
-開発計画、リリース計画、移行作業、調査タスクなどを Markdown repo で管理しているチーム向けです。PM suite を導入するほどではないが、Mermaid Gantt を手書きだけで保守するのはつらい、という場面に向いています。
+この拡張は Git-native、Markdown-native、lossless、Gantt-specific な編集を重視します。変更していない source は Pull Request で読みやすいまま残し、comment や未対応構文は可能な限り保持し、安全でない編集は diagnostics で知らせ、GitHub / GitLab / Obsidian などの Mermaid host でも引き続き表示できます。
 
 <!-- screenshot: readme-task-grid -->
 <p align="center">
   <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-task-grid.png" alt="Mermaid Gantt Editor Task Grid" width="960">
 </p>
 
+この editor は短い review loop を前提にしています。Mermaid Gantt block を開き、Task Grid で編集し、Preview と Diagnostics を確認してから、source-safe な変更だけを元の file に書き戻します。
+
 ## ブラウザで試す
 
-静的サイト版は [mermaid-gantt-editor.pages.dev](https://mermaid-gantt-editor.pages.dev/) で試せます。VS Code 拡張をインストールせずに、Task Grid、Mermaid Preview、source-safe editing、share、download の挙動を確認できます。
+静的サイト版は [mermaid-gantt-editor.pages.dev](https://mermaid-gantt-editor.pages.dev/) で試せます。VS Code 拡張をインストールせずに、Task Grid、Mermaid Preview、source-safe editing、format review、share、PNG / SVG download の挙動を確認できます。
 
-静的サイト版は編集体験の確認に向いています。Markdown CodeLens 連携や、ローカルの `.mmd` / Markdown file への書き戻しが必要な場合は VS Code 拡張を使ってください。
+静的サイト版は編集体験の確認に向いています。Markdown CodeLens 連携、local workspace の diagnostics、ローカルの `.mmd` / Markdown file への書き戻しが必要な場合は VS Code 拡張を使ってください。
 
 ## この拡張でできること
 
@@ -30,9 +32,11 @@ Task Grid で task label、ID、日付、期間、依存関係、タグを編集
 - section と task を追加、複製、移動、削除する
 - 検索、sort、filter で大きな Gantt を確認する
 - Mermaid preview を見ながら編集する
-- duplicate ID や missing dependency などの diagnostics を確認する
+- duplicate ID、missing dependency、self reference、dependency cycle などの diagnostics を確認する
 - 安全に直せる diagnostics に quick fix を適用する
-- structured editing が安全でない source は raw source fallback で編集する
+- Mermaid Gantt source の整形を before / after で確認してから適用する
+- rendered chart を SVG または PNG として export する
+- structured editing が安全でない source は fallback diagnostics で確認する
 - Markdown 内の対象 Mermaid block だけに変更を書き戻す
 
 ## Installation
@@ -64,7 +68,7 @@ title Product Plan
 dateFormat YYYY-MM-DD
 section Planning
 API design : done, a1, 2026-05-01, 3d
-設計レビュー : review, after a1, 2d
+Design review : review, after a1, 2d
 ```
 ````
 
@@ -92,20 +96,20 @@ Task Grid で label、ID、schedule、dependencies、tags を編集します。P
 
 ### 4. Diagnostics を確認する
 
-問題がある場合は Diagnostics に表示されます。安全に直せるものは quick fix から修正できます。
+問題がある場合は Diagnostics に表示されます。Dependency issues は undefined reference、self reference、cycle の数、related source、次に取るべき操作をまとめて確認できます。安全に直せるものは quick fix から修正できます。
 
 <!-- screenshot: readme-diagnostics -->
 <p align="center">
   <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-diagnostics.png" alt="Diagnostics and quick fixes" width="960">
 </p>
 
-### 5. 必要なら raw source fallback を使う
+### 5. 必要なら fallback diagnostics を確認する
 
-未対応構文や危険な metadata がある場合、拡張は source を壊さないために structured editing を止め、raw source fallback を表示します。
+未対応構文や危険な metadata がある場合、拡張は source を壊さないために structured editing を止め、diagnostics で理由を表示します。
 
 <!-- screenshot: readme-fallback -->
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-fallback.png" alt="Raw source fallback mode" width="960">
+  <img src="https://raw.githubusercontent.com/yyamamot/mermaid-gantt-editor/main/assets/readme-fallback.png" alt="Fallback diagnostics for unsafe source" width="960">
 </p>
 
 ## Features
@@ -115,11 +119,13 @@ Task Grid で label、ID、schedule、dependencies、tags を編集します。P
 | Task Grid | Gantt task を表形式で編集 | label、ID、date、duration、dependency、tag に対応 |
 | Markdown block editing | fenced `mermaid` Gantt block を直接開く | 複数 block がある Markdown でも対象 block だけを書き戻す |
 | Mermaid preview | 編集中の chart を確認 | bundled Mermaid runtime を使用 |
-| Details | 選択 task と document settings を編集 | Inspector / Diagnostics / Source などを切り替え |
-| Diagnostics | 手書き source の問題を検出 | duplicate ID、undefined dependency、date format mismatch など |
+| Details | 選択 task と document settings を編集 | Inspector / Diagnostics / retained source items などを切り替え |
+| Diagnostics | 手書き source の問題を検出 | duplicate ID、dependency issues、date format mismatch など |
 | Quick fix | 安全な修正を適用 | source range が明確なものだけを対象にする |
+| Format Review | Mermaid Gantt source を確認してから整形 | syntax highlight 付きの before / after を見てから書き戻す |
+| SVG / PNG export | rendered preview を保存 | docs、issue comment、release note で使える |
 | Source-safe write-back | 変更範囲を絞って書き戻す | comment、directive、unknown syntax は保持する |
-| Raw source fallback | 構造化編集が危険な source を保護 | 元 source を保持したまま手動編集できる |
+| Fallback diagnostics | 構造化編集が危険な source を保護 | Mermaid text は source editor 側に保持し、危険な write-back を避ける |
 | Host compatibility | GitHub / GitLab / Obsidian 向け注意点を表示 | host 側 Mermaid runtime との差分確認を補助 |
 
 ## 主な使い方
@@ -139,6 +145,14 @@ Task Grid の cell を直接編集します。`after` dependency は既存 task 
 ### Source order を壊さず確認する
 
 検索、sort、filter は view-only です。表示順を変えても Mermaid source の task order は変わりません。
+
+### Source を確認してから整形する
+
+Task Grid header の `Format` を押すと、整形前後の Mermaid Gantt source を確認できます。before / after を確認してから適用します。
+
+### Preview を export する
+
+Preview の export menu から rendered chart を SVG または PNG として保存できます。
 
 ### 安全でない source を扱う
 

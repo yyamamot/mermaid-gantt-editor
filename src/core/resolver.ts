@@ -362,9 +362,9 @@ function collectHostVersionDiagnostics(document: GanttDocument): ResolvedDiagnos
     return [createResolvedDiagnostic(
       "HOST_VERSION_SENSITIVE_SYNTAX",
       "warning",
-      "displayMode compact can depend on the Mermaid host version.",
+      "displayMode compact is preserved, but target hosts can render it differently.",
       range,
-      "Review Mermaid host version compatibility."
+      "Verify GitHub, GitLab, or Obsidian rendering before publishing."
     )];
   });
 }
@@ -472,7 +472,7 @@ function collectUndefinedDependencyDiagnostics(contexts: TaskResolutionContext[]
         diagnostics.push(createResolvedDiagnostic(
           "UNDEFINED_DEPENDENCY",
           "error",
-          "Dependency target is not defined.",
+          "Dependency target does not exist, so the schedule cannot resolve this task.",
           ref.range,
           "Choose an existing task ID."
         ));
@@ -512,7 +512,7 @@ function collectDependencyGraphDiagnostics(contexts: TaskResolutionContext[]): R
         diagnostics.push(createResolvedDiagnostic(
           "SELF_DEPENDENCY",
           "error",
-          "Task cannot depend on itself.",
+          "Task waits for itself, so the schedule cannot resolve this dependency.",
           ref.range,
           "Choose a different dependency target."
         ));
@@ -522,7 +522,7 @@ function collectDependencyGraphDiagnostics(contexts: TaskResolutionContext[]): R
         diagnostics.push(createResolvedDiagnostic(
           "CIRCULAR_DEPENDENCY",
           "error",
-          "Dependency creates a cycle.",
+          "Dependency chain contains a cycle, so task order cannot be resolved.",
           ref.range,
           "Remove or change one dependency in the cycle.",
           [target.task.label.range]

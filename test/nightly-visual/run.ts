@@ -92,6 +92,9 @@ async function main(): Promise<void> {
         ...(process.env.MERMAID_GANTT_TEST_OPEN_DETAILS_WITH_ROW_ACTION_MENU
           ? { MERMAID_GANTT_TEST_OPEN_DETAILS_WITH_ROW_ACTION_MENU: process.env.MERMAID_GANTT_TEST_OPEN_DETAILS_WITH_ROW_ACTION_MENU }
           : {}),
+        ...(process.env.MERMAID_GANTT_TEST_COLOR_THEME
+          ? { MERMAID_GANTT_TEST_COLOR_THEME: process.env.MERMAID_GANTT_TEST_COLOR_THEME }
+          : {}),
         ...(computerUseOptIn ? {
           MERMAID_GANTT_NIGHTLY_COMPUTER_USE: "1",
           ...(computerUseHoldMs ? { MERMAID_GANTT_NIGHTLY_COMPUTER_USE_HOLD_MS: computerUseHoldMs } : {})
@@ -107,12 +110,14 @@ async function main(): Promise<void> {
   assertHarnessLaunchEvents(config.harnessJsonlPath);
   const requiresPreviewRender = scenarioRequiresPreviewRender(scenario);
   const previewCollapsed = process.env.MERMAID_GANTT_TEST_PREVIEW_COLLAPSED === "1";
+  const lightTheme = /\blight\b/iu.test(process.env.MERMAID_GANTT_TEST_COLOR_THEME ?? "");
   const { captureMetadata, visualSignal } = await assertNightlyVisualScreenshotArtifact({
     screenshotPath,
     captureMetadataPath,
     previewCollapsed,
-    ...(!requiresPreviewRender || previewCollapsed ? {
+    ...(lightTheme || !requiresPreviewRender || previewCollapsed ? {
       visualSignalThresholds: {
+        ...(lightTheme ? { minDarkPixelRatio: 0 } : {}),
         minLightPixelRatio: previewCollapsed ? 0.0005 : 0.003,
         minAccentPixelRatio: 0
       }

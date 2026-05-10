@@ -9,6 +9,7 @@ import {
   parseGanttLossless,
   projectGanttSemantic,
   replaceMarkdownGanttBlock,
+  summarizeGanttFormatChanges,
   type EditorAction,
   type EditorState,
   type GanttFormatDiagnostic,
@@ -669,6 +670,7 @@ async function formatTaskGridSessionSource(
   const block = currentMarkdownBlock(editor, session.markdownBlockIndex);
   const before = block?.gantt.source ?? session.state.source;
   const result = formatGanttSource(before, options);
+  const summary = summarizeGanttFormatChanges(before, result.source, result.diagnostics);
   if (!result.changed) {
     if (result.diagnostics.length > 0) {
       await vscode.window.showWarningMessage(vscode.l10n.t("Some Mermaid Gantt source was left unchanged because it could not be formatted safely."));
@@ -680,7 +682,8 @@ async function formatTaskGridSessionSource(
   session.formatPreview = {
     before,
     after: result.source,
-    changedLineCount: countChangedLines(before, result.source),
+    changedLineCount: summary.changedLineCount,
+    summary,
     diagnostics: result.diagnostics.map((diagnostic) => diagnostic.message)
   };
   renderSessionPanelNow(context, session);
@@ -1559,19 +1562,6 @@ function findVisibleEditor(document: vscode.TextDocument): vscode.TextEditor | u
   return vscode.window.visibleTextEditors.find((editor) => editor.document.uri.toString() === document.uri.toString());
 }
 
-function countChangedLines(before: string, after: string): number {
-  const beforeLines = before.split(/\r\n|\n/);
-  const afterLines = after.split(/\r\n|\n/);
-  const max = Math.max(beforeLines.length, afterLines.length);
-  let changed = 0;
-  for (let index = 0; index < max; index += 1) {
-    if (beforeLines[index] !== afterLines[index]) {
-      changed += 1;
-    }
-  }
-  return changed;
-}
-
 async function replaceDocumentText(document: vscode.TextDocument, text: string): Promise<void> {
   const edit = new vscode.WorkspaceEdit();
   edit.replace(document.uri, fullDocumentRange(document), text);
@@ -1695,6 +1685,14 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     formatSource: vscode.l10n.t("Format source"),
     formatPreview: vscode.l10n.t("Format preview"),
     formatPreviewSummary: vscode.l10n.t("{0} lines will change."),
+    formatSummaryLines: vscode.l10n.t("Lines changed"),
+    formatSummaryTasks: vscode.l10n.t("Tasks affected"),
+    formatSummarySections: vscode.l10n.t("Sections affected"),
+    formatSummaryIndent: vscode.l10n.t("Indent"),
+    formatSummaryTaskColonAlignment: vscode.l10n.t("Colon alignment"),
+    formatSummaryBlankLines: vscode.l10n.t("Blank lines"),
+    formatSummaryOther: vscode.l10n.t("Other"),
+    formatSummaryPreservedUnsafeTasks: vscode.l10n.t("Preserved unsafe tasks"),
     applyFormatting: vscode.l10n.t("Apply formatting"),
     cancelFormatting: vscode.l10n.t("Cancel"),
     beforeFormatting: vscode.l10n.t("Before"),
@@ -1719,9 +1717,9 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     noTaskSelected: vscode.l10n.t("No task selected."),
     noDiagnostics: vscode.l10n.t("No diagnostics."),
     noAdvancedSourceItems: vscode.l10n.t("No advanced source items."),
-    limitedEditing: vscode.l10n.t("Preview source is unavailable. Structured editing is limited; review diagnostics and Advanced Source Items before writing back."),
-    fallbackEditing: vscode.l10n.t("Unsupported in structured mode. Structured editing is disabled; review Diagnostics while the lossless source is preserved in the text editor."),
-    previewBlocked: vscode.l10n.t("Preview source is blocked by projection issues. Review diagnostics or advanced source items."),
+    limitedEditing: vscode.l10n.t("Preview source is unavailable. Supported grid fields still use source-preserving write-back; review Diagnostics and Advanced Source Items before writing back."),
+    fallbackEditing: vscode.l10n.t("Structured editing is paused because this source cannot be projected safely. The original Mermaid text is preserved; review Diagnostics for the next step."),
+    previewBlocked: vscode.l10n.t("Preview source is blocked because some source is retained for safety. Review Diagnostics or Advanced Source Items."),
     previewRenderFailed: vscode.l10n.t("Preview render failed: "),
     previewBlockedTitle: vscode.l10n.t("Preview blocked"),
     previewRenderFailedTitle: vscode.l10n.t("Preview render failed"),
@@ -1745,27 +1743,58 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     hostCompatibilityProfileObsidian: vscode.l10n.t("Obsidian"),
     hostCompatibilityWarningCount: vscode.l10n.t("{0} compatibility warnings"),
     hostCompatibilityRetainedCount: vscode.l10n.t("{0} retained source items"),
+    hostCompatibilityProfileSummary: vscode.l10n.t("Profile summary"),
+    hostCompatibilityStatus: vscode.l10n.t("Status"),
+    hostCompatibilityStatusOk: vscode.l10n.t("Portable"),
+    hostCompatibilityStatusVerify: vscode.l10n.t("Verify before publishing"),
     hostCompatibilityProfileWarnings: vscode.l10n.t("Profile warnings"),
     hostCompatibilityNoWarnings: vscode.l10n.t("No profile-specific warnings for the current source."),
     hostCompatibilityRiskySyntax: vscode.l10n.t("Risky syntax"),
     hostCompatibilitySelectedProfile: vscode.l10n.t("Target Host"),
+    hostCompatibilityPriority: vscode.l10n.t("Priority"),
+    hostCompatibilityPriorityHigh: vscode.l10n.t("High"),
+    hostCompatibilityPriorityMedium: vscode.l10n.t("Medium"),
+    hostCompatibilityPriorityLow: vscode.l10n.t("Low"),
+    hostCompatibilityProfileImpact: vscode.l10n.t("Host impact"),
+    hostCompatibilityProfileNextStep: vscode.l10n.t("Next step"),
     hostCompatibilityRuntimeGitHub: vscode.l10n.t("GitHub-hosted Mermaid"),
     hostCompatibilityRuntimeGitLab: vscode.l10n.t("GitLab-hosted Mermaid"),
     hostCompatibilityRuntimeObsidian: vscode.l10n.t("Obsidian-hosted Mermaid"),
     hostCompatibilityWarningClickCall: vscode.l10n.t("click / call statements are retained in source, but host interaction and security behavior can differ."),
+    hostCompatibilityImpactClickCall: vscode.l10n.t("Links and callbacks may be disabled or handled differently by the target host security policy."),
+    hostCompatibilityNextStepClickCall: vscode.l10n.t("Keep the source intact, then verify interactions in the target host before publishing."),
     hostCompatibilityWarningConfig: vscode.l10n.t("frontmatter or init directives are retained; verify whether the target host accepts the same Mermaid config."),
+    hostCompatibilityImpactConfig: vscode.l10n.t("The diagram may render with a different theme, layout mode, or config support outside the bundled preview."),
+    hostCompatibilityNextStepConfig: vscode.l10n.t("Keep the retained config unless you need cross-host safety; use diagnostics quick fixes only when available."),
     hostCompatibilityWarningGitHub: vscode.l10n.t("GitHub chooses the Mermaid runtime in the host; use the preview as guidance, not as a guarantee."),
+    hostCompatibilityImpactGitHub: vscode.l10n.t("Rendering can differ from the bundled preview when GitHub updates or restricts its Mermaid runtime."),
+    hostCompatibilityNextStepGitHub: vscode.l10n.t("Preview the Markdown on GitHub, or prefer widely supported Mermaid Gantt syntax for published docs."),
     hostCompatibilityWarningGitLab: vscode.l10n.t("GitLab-hosted Mermaid rendering can lag bundled Mermaid; verify syntax before publishing."),
+    hostCompatibilityImpactGitLab: vscode.l10n.t("Newer Mermaid Gantt syntax may not render the same way on the target GitLab instance."),
+    hostCompatibilityNextStepGitLab: vscode.l10n.t("Check the target GitLab Mermaid support and avoid version-sensitive syntax when portability matters."),
     hostCompatibilityWarningObsidian: vscode.l10n.t("Obsidian Mermaid behavior depends on the app/plugin version and local settings."),
+    hostCompatibilityImpactObsidian: vscode.l10n.t("Local Obsidian settings or plugins can change rendering compared with the bundled preview."),
+    hostCompatibilityNextStepObsidian: vscode.l10n.t("Open the note in the target vault and verify the Mermaid preview before sharing."),
+    hostCompatibilityWarningSourcePreserved: vscode.l10n.t("Version-sensitive Mermaid syntax is preserved in source."),
+    hostCompatibilityImpactSourcePreserved: vscode.l10n.t("The editor will not remove it, but some target hosts may ignore or render it differently."),
+    hostCompatibilityNextStepSourcePreserved: vscode.l10n.t("Use the quick fix only when you need safer cross-host rendering; otherwise verify in the target host."),
     diagnosticsStage: vscode.l10n.t("Stage"),
     diagnosticsLocation: vscode.l10n.t("Location"),
     diagnosticsReason: vscode.l10n.t("Reason"),
     diagnosticsImpact: vscode.l10n.t("Impact"),
+    diagnosticsNextStep: vscode.l10n.t("Next step"),
     diagnosticsAction: vscode.l10n.t("Action"),
+    diagnosticsRelatedSource: vscode.l10n.t("Related source"),
+    dependencyIssues: vscode.l10n.t("Dependency issues"),
+    dependencyUndefinedReferences: vscode.l10n.t("Undefined references: {0}"),
+    dependencySelfReferences: vscode.l10n.t("Self references: {0}"),
+    dependencyCycles: vscode.l10n.t("Cycles: {0}"),
+    dependencyAffectedReferences: vscode.l10n.t("Affected references"),
+    dependencyQuickFixHint: vscode.l10n.t("Quick fixes replace this reference with an existing task ID."),
     removeBlockingReference: vscode.l10n.t("Remove reference {0}"),
     replaceBlockingReference: vscode.l10n.t("Replace reference with {0}"),
     useExistingTaskId: vscode.l10n.t("Use dependency {0}"),
-    fallbackImpact: vscode.l10n.t("Structured editing and preview are blocked until this source can be projected safely."),
+    fallbackImpact: vscode.l10n.t("The source is preserved unchanged; structured editing and preview stay paused until the unsafe range is resolved."),
     limitedEditingImpact: vscode.l10n.t("Preview source is blocked; supported grid fields still use source-preserving write-back."),
     diagnosticImpact: vscode.l10n.t("Review the highlighted source range before applying an action."),
     advancedSourceGuidance: vscode.l10n.t("This retained source item is not currently editable in the grid. It stays in the source and can be edited in the text editor."),
@@ -1778,18 +1807,50 @@ function createTaskGridLabels(): TaskGridWebviewLabels {
     diagnosticMessages: {
       "diagnostics.dateFormatMismatch": vscode.l10n.t("Task date does not match dateFormat."),
       "diagnostics.duplicateTaskId": vscode.l10n.t("Task ID is duplicated."),
-      "diagnostics.circularDependency": vscode.l10n.t("Dependency graph contains a cycle."),
-      "diagnostics.hostVersionSensitiveSyntax": vscode.l10n.t("This syntax may depend on the Mermaid host version."),
+      "diagnostics.circularDependency": vscode.l10n.t("Dependency chain contains a cycle, so task order cannot be resolved."),
+      "diagnostics.hostVersionSensitiveSyntax": vscode.l10n.t("This Mermaid syntax is source-safe in the editor, but GitHub, GitLab, or Obsidian may render it differently."),
       "diagnostics.includeExcludeConflict": vscode.l10n.t("Includes and Excludes contain the same value."),
       "diagnostics.invalidTickInterval": vscode.l10n.t("Tick Interval is invalid."),
       "diagnostics.keywordLikeTaskLabel": vscode.l10n.t("Task label looks like a Mermaid keyword."),
       "diagnostics.longLabelReadability": vscode.l10n.t("Task label may be hard to read in the preview."),
-      "diagnostics.selfDependency": vscode.l10n.t("Task depends on itself."),
-      "diagnostics.undefinedDependency": vscode.l10n.t("Dependency references an unknown task ID."),
+      "diagnostics.selfDependency": vscode.l10n.t("Task waits for itself, so the schedule cannot resolve this dependency."),
+      "diagnostics.undefinedDependency": vscode.l10n.t("Dependency target does not exist, so the schedule cannot resolve this task."),
       "diagnostics.topAxisPreviewUnsupported": vscode.l10n.t("Top Axis is retained in source, but preview rendering is currently unsupported."),
       "diagnostics.editorTaskDeleteReferenced": vscode.l10n.t("Task is referenced by dependency or click source."),
       "diagnostics.editorSectionDeleteReferenced": vscode.l10n.t("Section contains tasks referenced from outside the section."),
       "diagnostics.editorInvalidTickInterval": vscode.l10n.t("Tick Interval is invalid.")
+    },
+    diagnosticImpacts: {
+      "diagnostics.dateFormatMismatch": vscode.l10n.t("The task date may not be parsed by Mermaid using the document dateFormat."),
+      "diagnostics.duplicateTaskId": vscode.l10n.t("Dependencies cannot resolve to exactly one task while this ID is duplicated."),
+      "diagnostics.circularDependency": vscode.l10n.t("The schedule order cannot be resolved until the cycle is broken."),
+      "diagnostics.hostVersionSensitiveSyntax": vscode.l10n.t("The editor preserves this source, but target hosts may render it differently."),
+      "diagnostics.includeExcludeConflict": vscode.l10n.t("The same date or weekday has conflicting calendar rules."),
+      "diagnostics.invalidTickInterval": vscode.l10n.t("Mermaid may reject or ignore the axis interval."),
+      "diagnostics.keywordLikeTaskLabel": vscode.l10n.t("Mermaid may parse the label as a statement instead of a task."),
+      "diagnostics.longLabelReadability": vscode.l10n.t("The chart can become hard to scan or clip task text in previews."),
+      "diagnostics.selfDependency": vscode.l10n.t("The task cannot be scheduled because it waits for itself."),
+      "diagnostics.undefinedDependency": vscode.l10n.t("The task cannot be scheduled because the referenced ID is missing."),
+      "diagnostics.topAxisPreviewUnsupported": vscode.l10n.t("Bundled preview rendering is paused, but the source is kept intact."),
+      "diagnostics.editorTaskDeleteReferenced": vscode.l10n.t("Deleting this task would leave another source reference broken."),
+      "diagnostics.editorSectionDeleteReferenced": vscode.l10n.t("Deleting this section would leave outside references broken."),
+      "diagnostics.editorInvalidTickInterval": vscode.l10n.t("The setting cannot be written back until the interval is valid.")
+    },
+    diagnosticGuidance: {
+      "diagnostics.dateFormatMismatch": vscode.l10n.t("Change this date to match the document dateFormat, or use the conversion quick fix when available."),
+      "diagnostics.duplicateTaskId": vscode.l10n.t("Rename one duplicate task ID so dependencies can resolve to exactly one task."),
+      "diagnostics.circularDependency": vscode.l10n.t("Change one dependency in the cycle."),
+      "diagnostics.hostVersionSensitiveSyntax": vscode.l10n.t("Keep it when the target host supports it; use the quick fix only when you need safer cross-host rendering."),
+      "diagnostics.includeExcludeConflict": vscode.l10n.t("Keep the date or weekday in either Includes or Excludes, not both."),
+      "diagnostics.invalidTickInterval": vscode.l10n.t("Use a Mermaid tickInterval such as 1day, 1week, 1month, or apply the suggested value."),
+      "diagnostics.keywordLikeTaskLabel": vscode.l10n.t("Rename or prefix this task label so Mermaid does not read it as a statement keyword."),
+      "diagnostics.longLabelReadability": vscode.l10n.t("Shorten the label or review the rendered preview before publishing."),
+      "diagnostics.selfDependency": vscode.l10n.t("Remove this dependency or choose a different task ID."),
+      "diagnostics.undefinedDependency": vscode.l10n.t("Choose an existing task ID or remove this dependency."),
+      "diagnostics.topAxisPreviewUnsupported": vscode.l10n.t("The statement is kept in source. Remove it only if you need bundled preview rendering."),
+      "diagnostics.editorTaskDeleteReferenced": vscode.l10n.t("Remove or replace the blocking reference before deleting this task."),
+      "diagnostics.editorSectionDeleteReferenced": vscode.l10n.t("Move, delete, or update outside references before deleting this section."),
+      "diagnostics.editorInvalidTickInterval": vscode.l10n.t("Use a valid Mermaid tickInterval before writing back the setting.")
     },
     diagnosticActionLabels: {
       "diagnostics.action.alignDateFormat": vscode.l10n.t("Align task dates with dateFormat"),

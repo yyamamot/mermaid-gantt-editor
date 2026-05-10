@@ -155,6 +155,8 @@ describe("ScenarioSpec contract", () => {
       "nightly-visual-limited-editing",
       "nightly-visual-preview-resize",
       "nightly-visual-preview-pan",
+      "nightly-visual-add-task",
+      "nightly-visual-add-task-format-preview",
       "nightly-visual-format-preview",
       "nightly-visual-ja-responsive"
     ]);
